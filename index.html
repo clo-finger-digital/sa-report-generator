@@ -132,7 +132,6 @@
                 return;
             }
 
-            // DYNAMIC DATE RESOLUTION ENGINE: Extracted from local browser metrics context
             const today = new Date();
             const monthText = today.toLocaleDateString("en-US", { month: "long" });
             const yearText = today.getFullYear();
@@ -142,7 +141,7 @@
             const monthNum = String(today.getMonth() + 1).padStart(2, '0');
             const computedDateNumeric = `${dayNum}-${monthNum}-${yearText}`;
 
-            logToConsole(`Date Pipeline Sync: Active Target Configured to ${computedDateText}`);
+            logToConsole(`Date Pipeline Sync: Active Execution Target Set to ${computedDateText}`);
 
             logToConsole("Pulling template document via relative repo tree check...");
             try {
@@ -189,6 +188,8 @@ testee_abbr = JS_TESTEE_ABBREVIATION
 
 current_date_text = JS_COMPUTED_DATE_TEXT
 current_date_numeric = JS_COMPUTED_DATE_NUMERIC
+
+print(f"Executing clean SA structural build for: {sys_name}")
 
 def process_dynamic_telemetry(wab_path):
     scope_paragraphs, objective_paragraphs, security_requirements = [], [], []
@@ -292,9 +293,13 @@ def generate_sa_report(telemetry, template_path, filename):
         return text.replace("*", "").strip()
 
     def replace_text_in_paragraph(p, lookup_tuples):
+        # HARD LOCK TITLE PROTECTION: Immediately stop if paragraph has section numbering formats
         full_text = "".join(run.text for run in p.runs)
+        clean_stripped = full_text.strip()
+        if re.match(r'^\d+\.', clean_stripped) or clean_stripped.startswith("8."):
+            return
+
         lower_full = full_text.lower().replace(" ", "").replace("\\n", "")
-        
         if "reviewandinterview" in lower_full and "checklists" in lower_full:
             full_text = f"Review and interview sessions to check the security compliance of information systems of {testee_abbr} using security checklists were conducted by {company_abbr}. The following security domains were covered in the security review:"
             if p.runs:
@@ -344,11 +349,11 @@ def generate_sa_report(telemetry, template_path, filename):
                 run.font.size = Pt(12)
             continue
 
-        # POSITIONAL LOCK GATE: Skip checking or editing if it is the bold title header block
-        if "8.securityrequirements" in lower_normalized or normalized_p_text.startswith("8."):
+        # DIRECT HEADER GUARDIAN: Stop execution on any title header block matching index or string prefix rules
+        if "8.securityrequirements" in lower_normalized or normalized_p_text.startswith("8.") or re.match(r'^\d+\.', normalized_p_text):
             continue
 
-        # Intercept and modify only the description text row beneath the title block
+        # Edit only the description block line beneath the heading precisely
         if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) or ("conductingthesecurityaudit" in lower_normalized):
             if not has_populated_section_8:
                 has_populated_section_8 = True
@@ -359,6 +364,7 @@ def generate_sa_report(telemetry, template_path, filename):
                     for msg in telemetry["security_requirements"]:
                         current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
                 else:
+                    # Explicit mapping rule fallback if telemetry collection returns minimal context
                     explicit_18_points = [
                         "Baseline IT Security Policy;",
                         "IT Security Guidelines;",
@@ -435,7 +441,7 @@ def generate_sa_report(telemetry, template_path, filename):
             except Exception: pass
 
     doc.save(filename)
-    print("SA Report compiled successfully with section titles protected.")
+    print("SA Report compiled successfully. All structural headers preserved.")
 
 telemetry = process_dynamic_telemetry(JS_WAB_NAME)
 generate_sa_report(telemetry, "sa_template.docx", "Generated_SA_Report_Final.docx")
