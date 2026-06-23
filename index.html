@@ -297,7 +297,7 @@ def generate_sa_report(telemetry, template_path, filename):
         full_text = "".join(run.text for run in p.runs)
         lower_full = full_text.lower().replace(" ", "").replace("\\n", "")
         
-        # Intercept formatting-split line wraps and populate them directly
+        # Intercept line wraps split internally by hidden run formatting elements
         if "reviewandinterview" in lower_full and "checklists" in lower_full:
             full_text = f"Review and interview sessions to check the security compliance of information systems of {testee_abbr} using security checklists were conducted by {company_abbr}. The following security domains were covered in the security review:"
             if p.runs:
@@ -307,7 +307,7 @@ def generate_sa_report(telemetry, template_path, filename):
                 p.text = full_text
             return
 
-        # UNRESTRICTED GLOBAL COMPILATION: All section methodology boundary gate return blocks are removed.
+        # UNRESTRICTED GLOBAL COMPILATION: Fully processes Section 4 without skipping paragraphs
         modified = False
         for k, val in lookup_tuples:
             cleaned_key = k.strip("*").strip()
@@ -364,7 +364,7 @@ def generate_sa_report(telemetry, template_path, filename):
                 for msg in telemetry["objective_paragraphs"][1:]:
                     current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
             else: p.text = ""
-        elif "copy from WAB section 4.4" in normalized_p_text:
+        elif "copy from WAB section 4.4" in normalized_p_text or "copy from WAB section 8" in normalized_p_text:
             p.text = f"{company_abbr} referred to the following documents in conducting the security audit assessment:"
             current_anchor = p
             for msg in telemetry["security_requirements"]:
