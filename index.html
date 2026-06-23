@@ -132,7 +132,7 @@
                 return;
             }
 
-            // DYNAMIC DATE RESOLUTION ENGINE: Read localized client system clock values natively
+            // DYNAMIC DATE RESOLUTION ENGINE: Extracted from client runtime time zone states
             const today = new Date();
             const monthText = today.toLocaleDateString("en-US", { month: "long" });
             const yearText = today.getFullYear();
@@ -190,7 +190,7 @@ testee_abbr = JS_TESTEE_ABBREVIATION
 current_date_text = JS_COMPUTED_DATE_TEXT
 current_date_numeric = JS_COMPUTED_DATE_NUMERIC
 
-print(f"Executing deep SA text pivot scan for: {sys_name}")
+print(f"Executing clean SA structural build for: {sys_name}")
 
 def process_dynamic_telemetry(wab_path):
     scope_paragraphs, objective_paragraphs, security_requirements = [], [], []
@@ -222,7 +222,7 @@ def process_dynamic_telemetry(wab_path):
             elif "4.1.2" in normalized_txt or "Project Management" in normalized_txt:
                 capture_desc = False
 
-            # Specialized Pivot Lock for Clause 4.4.1 Content
+            # Pivot target rule for section 4.4.1 compliance points
             if "The Contractor shall reference the following documents" in normalized_txt or "Contractor shall reference the following documents" in normalized_txt:
                 capture_req = True
                 continue
@@ -270,7 +270,10 @@ def process_dynamic_telemetry(wab_path):
 def generate_sa_report(telemetry, template_path, filename):
     doc = Document(template_path)
 
+    # Cleaned replacement matrix resolving repeating template suffixes
     replacements = [
+        ("*company name* Limited", company_name),
+        ("*company name*", company_name),
         ("company name limited", company_name),
         ("company name", company_name),
         ("information system name (information system abbreviation)", f"{sys_name} ({sys_abbr})"),
@@ -330,7 +333,7 @@ def generate_sa_report(telemetry, template_path, filename):
         p_element.addnext(new_p._p)
         return new_p
 
-    # Sentry Execution Flag to guarantee Section 8 fires exactly once
+    # Positional Lock Sentry Flag to guarantee Section 8 fires exactly once
     has_populated_section_8 = False
 
     # Sweep Body Elements Matrix
@@ -346,42 +349,42 @@ def generate_sa_report(telemetry, template_path, filename):
                 run.font.size = Pt(12)
             continue
 
-        # Atomic Interceptor Gate to clear and inject the 18 isolated bullet items cleanly exactly once
-        if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) and not has_populated_section_8:
-            has_populated_section_8 = True
-            p.text = f"{company_abbr} referred to the following documents in conducting the security audit:"
-            current_anchor = p
-            
-            if len(telemetry["security_requirements"]) > 0:
-                for msg in telemetry["security_requirements"]:
-                    current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
+        # Strict Multi-run Interceptor Gate for Section 8 Security Baseline
+        if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) or ("referredto" in lower_normalized and "conductingthesecurity" in lower_normalized):
+            if not has_populated_section_8:
+                has_populated_section_8 = True
+                p.text = f"{company_abbr} referred to the following documents in conducting the security audit:"
+                current_anchor = p
+                
+                if len(telemetry["security_requirements"]) > 0:
+                    for msg in telemetry["security_requirements"]:
+                        current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
+                else:
+                    explicit_18_points = [
+                        "Baseline IT Security Policy;",
+                        "IT Security Guidelines;",
+                        "Practice Guide for Security Risk Assessment & Audit;",
+                        "Practice Guide for Information Security Incident Handling;",
+                        "Practice Guide for Penetration Testing;",
+                        "Practice Guide for Internet Gateway Security;",
+                        "Practice Guide for Website and Web Application Security;",
+                        "Practice Guide for Cloud Computing Security;",
+                        "Practice Guide for Mobile Security;",
+                        "Practice Guide for Security Log Management;",
+                        "ArchSD IT Security Policy;",
+                        "ArchSD General Circular No. 4/2008 - 'General Requirement on Software Asset Management';",
+                        "ArchSD General Circular No. 2/2015 - 'Use of Internet Services';",
+                        "End User Instructions on Information Technology Security;",
+                        "ArchSD IT Security Incident Handling Procedures;",
+                        "Security Checklist for iAM Smart-enabled Online Services;",
+                        "Security Testing Report Template for iAM Smart-enabled Online Services;",
+                        "The House Rules of iAM Smart."
+                    ]
+                    for item in explicit_18_points:
+                        current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
             else:
-                explicit_18_points = [
-                    "Baseline IT Security Policy;",
-                    "IT Security Guidelines;",
-                    "Practice Guide for Security Risk Assessment & Audit;",
-                    "Practice Guide for Information Security Incident Handling;",
-                    "Practice Guide for Penetration Testing;",
-                    "Practice Guide for Internet Gateway Security;",
-                    "Practice Guide for Website and Web Application Security;",
-                    "Practice Guide for Cloud Computing Security;",
-                    "Practice Guide for Mobile Security;",
-                    "Practice Guide for Security Log Management;",
-                    "ArchSD IT Security Policy;",
-                    "ArchSD General Circular No. 4/2008 - 'General Requirement on Software Asset Management';",
-                    "ArchSD General Circular No. 2/2015 - 'Use of Internet Services';",
-                    "End User Instructions on Information Technology Security;",
-                    "ArchSD IT Security Incident Handling Procedures;",
-                    "Security Checklist for iAM Smart-enabled Online Services;",
-                    "Security Testing Report Template for iAM Smart-enabled Online Services;",
-                    "The House Rules of iAM Smart."
-                ]
-                for item in explicit_18_points:
-                    current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
-                    
-        elif "wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized:
-            # Drop any lingering multirun fragment matches to stop duplicates
-            p.text = ""
+                # Completely blank out subsequent broken multi-run copies to remove repetitions
+                p.text = ""
         elif "copy from WAB, 4.1.1 Current Environment Description" in normalized_p_text or "copy from WAB, 9.1 System Description" in normalized_p_text:
             p.text = telemetry["system_description"]
         elif "insert all under brief of work assignment under category b, 1. Scope of the services, 1.1" in normalized_p_text:
@@ -433,7 +436,7 @@ def generate_sa_report(telemetry, template_path, filename):
             except Exception: pass
 
     doc.save(filename)
-    print("SA Report compiled successfully without trailing stutters.")
+    print("SA Report compiled successfully without trailing repetitions.")
 
 telemetry = process_dynamic_telemetry(JS_WAB_NAME)
 generate_sa_report(telemetry, "sa_template.docx", "Generated_SA_Report_Final.docx")
