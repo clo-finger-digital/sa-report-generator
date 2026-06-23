@@ -258,14 +258,16 @@ def process_dynamic_telemetry(wab_path):
 def generate_sa_report(telemetry, template_path, filename):
     doc = Document(template_path)
 
+    # Re-engineered clean template replacement pairs matching report specifications
     replacements = [
+        ("company name limited", company_name),
+        ("company name", company_name),
         ("information system name (information system abbreviation)", f"{sys_name} ({sys_abbr})"),
         ("*(INFORMATION SYSTEM ABBREVIATION)*", sys_abbr),
         ("(INFORMATION SYSTEM ABBREVIATION)", sys_abbr),
         ("INFORMATION SYSTEM ABBREVIATION", sys_abbr),
         ("information system name", sys_name),
         ("company name (company abbreviation)", f"{company_name} ({company_abbr})"),
-        ("company name", company_name),
         ("company abbreviation", company_abbr),
         ("COMPANY ABBREVIATION", company_abbr),
         ("testee name (testee abbreviation)", f"{testee_name} ({testee_abbr})"),
@@ -321,39 +323,21 @@ def generate_sa_report(telemetry, template_path, filename):
     for p_idx, p in enumerate(list(doc.paragraphs)):
         full_p_text = "".join(run.text for run in p.runs)
         normalized_p_text = full_p_text.replace('\\n', ' ').strip()
-        lower_normalized = normalized_p_text.lower()
+        lower_normalized = normalized_p_text.lower().replace(" ", "")
         
-        if p_idx < 15 and ("may 2026" in lower_normalized or "june 2026" in lower_normalized):
+        if p_idx < 15 and ("may 2026" in normalized_p_text.lower() or "june 2026" in normalized_p_text.lower()):
             p.text = current_date_text
             for run in p.runs:
                 run.font.name = "Times New Roman"
                 run.font.size = Pt(12)
             continue
 
-        if "copy from WAB, 4.1.1 Current Environment Description" in normalized_p_text or "copy from WAB, 9.1 System Description" in normalized_p_text:
-            p.text = telemetry["system_description"]
-        elif "insert all under brief of work assignment under category b, 1. Scope of the services, 1.1" in normalized_p_text:
-            if len(telemetry["scope_paragraphs"]) > 0:
-                p.text = telemetry["scope_paragraphs"][0]
-                p.style = 'List Bullet'
-                current_anchor = p
-                for msg in telemetry["scope_paragraphs"][1:]:
-                    current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
-            else: p.text = ""
-        elif "copy from work assignment under category b, all under 3. Project objectives" in normalized_p_text:
-            if len(telemetry["objective_paragraphs"]) > 0:
-                p.text = telemetry["objective_paragraphs"][0]
-                p.style = 'List Bullet'
-                current_anchor = p
-                for msg in telemetry["objective_paragraphs"][1:]:
-                    current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
-            else: p.text = ""
-        # Match Section 8 target placeholder strictly
-        elif "copy from wab section 4.4" in lower_normalized or "copy from wab section 8" in lower_normalized or "copy from wab, section 4.4" in lower_normalized:
+        # Strict Dynamic Structural Injection Interceptor Rule for Section 8 Security Requirements
+        if "wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized:
             p.text = f"{company_abbr} referred to the following baseline requirements from the Work Assignment Brief (WAB) in conducting the security audit assessment:"
             current_anchor = p
             
-            # Enforce dynamic injection from WAB if successful, otherwise map the 18 points directly
+            # Use parsed list if available, else structural explicit mapping fallback
             if len(telemetry["security_requirements"]) > 1:
                 for msg in telemetry["security_requirements"]:
                     current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
@@ -381,6 +365,24 @@ def generate_sa_report(telemetry, template_path, filename):
                 ]
                 for item in explicit_18_points:
                     current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
+        elif "copy from WAB, 4.1.1 Current Environment Description" in normalized_p_text or "copy from WAB, 9.1 System Description" in normalized_p_text:
+            p.text = telemetry["system_description"]
+        elif "insert all under brief of work assignment under category b, 1. Scope of the services, 1.1" in normalized_p_text:
+            if len(telemetry["scope_paragraphs"]) > 0:
+                p.text = telemetry["scope_paragraphs"][0]
+                p.style = 'List Bullet'
+                current_anchor = p
+                for msg in telemetry["scope_paragraphs"][1:]:
+                    current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
+            else: p.text = ""
+        elif "copy from work assignment under category b, all under 3. Project objectives" in normalized_p_text:
+            if len(telemetry["objective_paragraphs"]) > 0:
+                p.text = telemetry["objective_paragraphs"][0]
+                p.style = 'List Bullet'
+                current_anchor = p
+                for msg in telemetry["objective_paragraphs"][1:]:
+                    current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
+            else: p.text = ""
         else:
             replace_text_in_paragraph(p, replacements)
 
