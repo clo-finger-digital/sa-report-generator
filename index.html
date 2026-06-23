@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SA Report Automation Hub</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pyodide Core Engine for Client-Side Python Execution -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
@@ -15,6 +17,7 @@
         </header>
 
         <main class="space-y-6">
+            <!-- UI VARIABLES PANEL -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
                 <h2 class="text-xl font-bold text-white mb-4">Pipeline Injector Variables</h2>
                 
@@ -46,11 +49,13 @@
                 </div>
             </section>
 
+            <!-- DATA SOURCE FILE UPLOADS -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
                 <h2 class="text-xl font-bold text-white mb-2">Data Source File Uploads</h2>
                 <p class="text-xs text-slate-400 mb-4">Note: The target SA Template document is automatically pulled directly from your relative repository tree path.</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- WAB Document Upload Box (REQUIRED) -->
                     <div class="p-4 bg-slate-950 border border-dashed border-blue-500/50 rounded-lg md:col-span-2">
                         <label class="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">WAB Brief Document (.docx) *Required</label>
                         <input type="file" id="file_wab" accept=".docx" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-900/50 file:text-blue-200 hover:file:bg-blue-800 cursor-pointer">
@@ -64,6 +69,7 @@
                 </div>
             </section>
 
+            <!-- Console Log Window -->
             <section class="bg-slate-950 rounded-lg border border-slate-800 p-4 shadow-inner">
                 <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">System Execution Log</span>
                 <pre id="console_output" class="text-xs font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap max-h-64">System initialized. Waiting for source files...</pre>
@@ -211,10 +217,9 @@ def process_dynamic_telemetry(wab_path):
             # Specialized Pivot Lock for Clause 4.4.1 Content
             if "The Contractor shall reference the following documents" in normalized_txt or "Contractor shall reference the following documents" in normalized_txt:
                 capture_req = True
-                if normalized_txt not in security_requirements:
-                    security_requirements.append(normalized_txt)
                 continue
-            elif "4.4.2" in normalized_txt or "Where necessary" in normalized_txt or "4.5" in normalized_txt:
+            # Force close immediately when the bullet points list ends at the next action step paragraph
+            elif capture_req and ("Gather all relevant" in normalized_txt or "4.4.2" in normalized_txt or "Where necessary" in normalized_txt):
                 capture_req = False
 
             if capture_scope and len(normalized_txt) > 0:
@@ -258,7 +263,6 @@ def process_dynamic_telemetry(wab_path):
 def generate_sa_report(telemetry, template_path, filename):
     doc = Document(template_path)
 
-    # Re-engineered clean template replacement pairs matching report specifications
     replacements = [
         ("company name limited", company_name),
         ("company name", company_name),
@@ -332,36 +336,35 @@ def generate_sa_report(telemetry, template_path, filename):
                 run.font.size = Pt(12)
             continue
 
-        # Strict Dynamic Structural Injection Interceptor Rule for Section 8 Security Requirements
-        if "wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized:
-            p.text = f"{company_abbr} referred to the following baseline requirements from the Work Assignment Brief (WAB) in conducting the security audit assessment:"
+        # Target Section 8 / 4.4 template placeholder runs accurately
+        if "wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized and "referredto" in lower_normalized:
+            p.text = f"{company_abbr} referred to the following documents in conducting the security audit:"
             current_anchor = p
             
-            # Use parsed list if available, else structural explicit mapping fallback
-            if len(telemetry["security_requirements"]) > 1:
+            # Populate isolated baseline elements matching criteria
+            if len(telemetry["security_requirements"]) > 0:
                 for msg in telemetry["security_requirements"]:
                     current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
             else:
                 explicit_18_points = [
-                    "The Contractor shall reference the following documents when performing security risk assessment and security audit. The requirements listed in these reference documents together form the “Security Baseline” for the assessment and audit:",
-                    "(i) Baseline IT Security Policy;",
-                    "(ii) IT Security Guidelines;",
-                    "(iii) Practice Guide for Security Risk Assessment & Audit;",
-                    "(iv) Practice Guide for Information Security Incident Handling;",
-                    "(v) Practice Guide for Penetration Testing;",
-                    "(vi) Practice Guide for Internet Gateway Security;",
-                    "(vii) Practice Guide for Website and Web Application Security;",
-                    "(viii) Practice Guide for Cloud Computing Security;",
-                    "(ix) Practice Guide for Mobile Security;",
-                    "(x) Practice Guide for Security Log Management;",
-                    "(xi) ArchSD IT Security Policy;",
-                    "(xii) ArchSD General Circular No. 4/2008 - 'General Requirement on Software Asset Management';",
-                    "(xiii) ArchSD General Circular No. 2/2015 - 'Use of Internet Services';",
-                    "(xiv) End User Instructions on Information Technology Security;",
-                    "(xv) ArchSD IT Security Incident Handling Procedures;",
-                    "(xvi) Security Checklist for iAM Smart-enabled Online Services;",
-                    "(xvii) Security Testing Report Template for iAM Smart-enabled Online Services;",
-                    "(xviii) The House Rules of iAM Smart."
+                    "Baseline IT Security Policy;",
+                    "IT Security Guidelines;",
+                    "Practice Guide for Security Risk Assessment & Audit;",
+                    "Practice Guide for Information Security Incident Handling;",
+                    "Practice Guide for Penetration Testing;",
+                    "Practice Guide for Internet Gateway Security;",
+                    "Practice Guide for Website and Web Application Security;",
+                    "Practice Guide for Cloud Computing Security;",
+                    "Practice Guide for Mobile Security;",
+                    "Practice Guide for Security Log Management;",
+                    "ArchSD IT Security Policy;",
+                    "ArchSD General Circular No. 4/2008 - 'General Requirement on Software Asset Management';",
+                    "ArchSD General Circular No. 2/2015 - 'Use of Internet Services ';",
+                    "End User Instructions on Information Technology Security;",
+                    "ArchSD IT Security Incident Handling Procedures;",
+                    "Security Checklist for iAM Smart-enabled Online Services;",
+                    "Security Testing Report Template for iAM Smart-enabled Online Services;",
+                    "The House Rules of iAM Smart."
                 ]
                 for item in explicit_18_points:
                     current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
@@ -416,7 +419,7 @@ def generate_sa_report(telemetry, template_path, filename):
             except Exception: pass
 
     doc.save(filename)
-    print("SA Report compiled successfully with Section 8 dynamically appended.")
+    print("SA Report compiled successfully with section 8 isolated bullets.")
 
 telemetry = process_dynamic_telemetry(JS_WAB_NAME)
 generate_sa_report(telemetry, "sa_template.docx", "Generated_SA_Report_Final.docx")
