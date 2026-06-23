@@ -196,6 +196,7 @@ def process_dynamic_telemetry(wab_path):
     try:
         wab_doc = Document(wab_path)
         capture_scope, capture_obj, capture_desc, capture_req = False, False, False, False
+        
         for p in wab_doc.paragraphs:
             txt = "".join(run.text for run in p.runs).strip()
             normalized_txt = txt.replace('\\xa0', ' ').strip()
@@ -218,10 +219,13 @@ def process_dynamic_telemetry(wab_path):
             elif "4.1.2" in normalized_txt or "Project Management" in normalized_txt:
                 capture_desc = False
 
-            if "GOVERNMENT STANDARDS, METHODOLOGIES AND QUALITY REQUIREMENTS" in normalized_txt or "Security Requirements" in normalized_txt:
+            # Absolute context lock strategy for Section 4.4 Reference Requirements
+            if "The Contractor shall reference the following documents" in normalized_txt or "Contractor shall reference the following documents" in normalized_txt:
                 capture_req = True
+                if normalized_txt not in security_requirements:
+                    security_requirements.append(normalized_txt)
                 continue
-            elif "PROJECT DELIVERABLES, MILESTONES & IMPLEMENTATION SCHEDULE" in normalized_txt:
+            elif "4.4.2" in normalized_txt or "Where necessary" in normalized_txt:
                 capture_req = False
 
             if capture_scope and len(normalized_txt) > 0:
@@ -246,20 +250,9 @@ def process_dynamic_telemetry(wab_path):
                             system_description_text += "\\n" + normalized_txt
 
             if capture_req and len(normalized_txt) > 0:
-                if normalized_txt.startswith("Where necessary"):
-                    capture_req = False
-                    continue
-                
-                # Check for list properties natively or evaluate prefix patterns directly
-                pPr = p._p.get_or_add_pPr()
-                numPr = pPr.find(f'{{{W_NAMESPACE}}}numPr')
-                is_numbered = (numPr is not None)
-                
-                # Explicit string matches for compliance standards found inside Work Assignment Brief section
-                lower_norm = normalized_txt.lower()
-                if is_numbered or any(pkg in lower_norm for pkg in ["baseline", "it security policy", "guidelines", "security regulations", "hksarg", "security risk assessment"]):
-                    if normalized_txt not in security_requirements and "essential requirements" not in lower_norm:
-                        security_requirements.append(normalized_txt)
+                # Append subsequent numbered points into the Section 8 registry bucket
+                if normalized_txt not in security_requirements and "government regulations" not in normalized_txt.lower():
+                    security_requirements.append(normalized_txt)
                         
     except Exception as e:
         print(f"Telemetry warning: {str(e)}")
@@ -368,20 +361,35 @@ def generate_sa_report(telemetry, template_path, filename):
                 for msg in telemetry["objective_paragraphs"][1:]:
                     current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
             else: p.text = ""
-        # Capture Section 8 / Section 4.4 exact anchor matches natively
+        # Match template's internal Section 4.4 anchor text to dump extracted compliance standards
         elif "copy from wab section 4.4" in lower_normalized or "copy from wab section 8" in lower_normalized or "copy from wab, section 4.4" in lower_normalized:
-            p.text = f"{company_abbr} referred to the following documents promulgated by the Digital Policy Office (DPO) and relevant statutory bodies in conducting the security audit assessment:"
+            p.text = f"{company_abbr} referred to the following baseline requirements from the Work Assignment Brief (WAB) in conducting the security audit assessment:"
             current_anchor = p
             if len(telemetry["security_requirements"]) > 0:
                 for msg in telemetry["security_requirements"]:
                     current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
             else:
-                # Direct fallback text alignment if brief lacks programmatic loops
+                # Built-in strict programmatic alignment mapping fallback
                 fallback_items = [
-                    "Baseline IT Security Policy (S17) promulgated by the Digital Policy Office (DPO);",
-                    "IT Security Guidelines (S18) promulgated by the Digital Policy Office (DPO);",
-                    "Personal Data (Privacy) Ordinance (Cap. 486);",
-                    "Government Security Regulations (SRs)."
+                    "The Contractor shall reference the following documents when performing security risk assessment and security audit. The requirements listed in these reference documents together form the “Security Baseline” for the assessment and audit:",
+                    "(i) Baseline IT Security Policy;",
+                    "(ii) IT Security Guidelines;",
+                    "(iii) Practice Guide for Security Risk Assessment & Audit;",
+                    "(iv) Practice Guide for Information Security Incident Handling;",
+                    "(v) Practice Guide for Penetration Testing;",
+                    "(vi) Practice Guide for Internet Gateway Security;",
+                    "(vii) Practice Guide for Website and Web Application Security;",
+                    "(viii) Practice Guide for Cloud Computing Security;",
+                    "(ix) Practice Guide for Mobile Security;",
+                    "(x) Practice Guide for Security Log Management;",
+                    "(xi) ArchSD IT Security Policy;",
+                    "(xii) ArchSD General Circular No. 4/2008 - 'General Requirement on Software Asset Management';",
+                    "(xiii) ArchSD General Circular No. 2/2015 - 'Use of Internet Services';",
+                    "(xiv) End User Instructions on Information Technology Security;",
+                    "(xv) ArchSD IT Security Incident Handling Procedures;",
+                    "(xvi) Security Checklist for iAM Smart-enabled Online Services;",
+                    "(xvii) Security Testing Report Template for iAM Smart-enabled Online Services;",
+                    "(xviii) The House Rules of iAM Smart."
                 ]
                 for item in fallback_items:
                     current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
