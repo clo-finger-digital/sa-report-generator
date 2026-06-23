@@ -189,7 +189,7 @@ testee_abbr = JS_TESTEE_ABBREVIATION
 current_date_text = JS_COMPUTED_DATE_TEXT
 current_date_numeric = JS_COMPUTED_DATE_NUMERIC
 
-print(f"Executing deep SA text pivot scan for: {sys_name}")
+print(f"Executing clean SA structural build for: {sys_name}")
 
 def process_dynamic_telemetry(wab_path):
     scope_paragraphs, objective_paragraphs, security_requirements = [], [], []
@@ -296,8 +296,8 @@ def generate_sa_report(telemetry, template_path, filename):
         full_text = "".join(run.text for run in p.runs)
         clean_stripped = full_text.strip()
         
-        # ABSOLUTE FILTER: Skip paragraph mutation if it features structural header attributes
-        if re.match(r'^\d+\.', clean_stripped) or clean_stripped.startswith("8.") or p.style.name.startswith("Heading"):
+        # STRUCTURAL TITLE GUARD: Instantly exit if this node is a true header line
+        if re.match(r'^\d+\.', clean_stripped) or p.style.name.startswith("Heading"):
             return
 
         lower_full = full_text.lower().replace(" ", "").replace("\\n", "")
@@ -350,11 +350,11 @@ def generate_sa_report(telemetry, template_path, filename):
                 run.font.size = Pt(12)
             continue
 
-        # DIRECT BLOCK FILTER: Bypass header nodes from loose internal run scans entirely
-        if "8.securityrequirements" in lower_normalized or normalized_p_text.startswith("8.") or re.match(r'^\d+\.', normalized_p_text) or p.style.name.startswith("Heading"):
+        # STRICT HEADER ENFORCEMENT: Never run modification code on section header blocks
+        if "8.securityrequirements" in lower_normalized or re.match(r'^\d+\.', normalized_p_text) or p.style.name.startswith("Heading"):
             continue
 
-        # Intercept only the descriptive row anchor directly underneath the section title block
+        # Target ONLY the placeholder row line below the title block
         if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) or ("conductingthesecurityaudit" in lower_normalized):
             if not has_populated_section_8:
                 has_populated_section_8 = True
@@ -441,7 +441,7 @@ def generate_sa_report(telemetry, template_path, filename):
             except Exception: pass
 
     doc.save(filename)
-    print("SA Report compiled successfully. Structural headers locked down.")
+    print("SA Report compiled successfully. Structural headers completely locked down.")
 
 telemetry = process_dynamic_telemetry(JS_WAB_NAME)
 generate_sa_report(telemetry, "sa_template.docx", "Generated_SA_Report_Final.docx")
