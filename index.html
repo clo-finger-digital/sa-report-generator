@@ -135,7 +135,7 @@
             logToConsole("Pulling template document via relative repo tree check...");
             try {
                 const response = await fetch("./SA%20template.docx");
-                if (!response.ok) throw new Error("Template access error 404. Make sure 'SA template.docx' is in your root folder.");
+                if (!response.ok) throw new Error("Template access error 404. Make sure 'SA template.docx' is in your repository root.");
                 const templateBuffer = await response.arrayBuffer();
                 const templateData = new Uint8Array(templateBuffer);
                 
@@ -161,16 +161,6 @@
 import os
 import sys
 import re
-from datetime import datetime
-
-class BrowserLogRedirect:
-    def write(self, s):
-        import js
-        js.logToConsole(str(s))
-    def flush(self): pass
-
-sys.stdout = BrowserLogRedirect()
-sys.stderr = BrowserLogRedirect()
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -186,12 +176,11 @@ testee_abbr = JS_TESTEE_ABBREVIATION
 current_date_text = "June 2026"
 current_date_numeric = "22-06-2026"
 
-print(f"Executing unrestricted SA parsing pipeline for: {sys_name}")
+print(f"Executing deep SA text pivot scan for: {sys_name}")
 
 def process_dynamic_telemetry(wab_path):
     scope_paragraphs, objective_paragraphs, security_requirements = [], [], []
     system_description_text = ""
-    W_NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
     try:
         wab_doc = Document(wab_path)
@@ -219,13 +208,13 @@ def process_dynamic_telemetry(wab_path):
             elif "4.1.2" in normalized_txt or "Project Management" in normalized_txt:
                 capture_desc = False
 
-            # Absolute context lock strategy for Section 4.4 Reference Requirements
+            # Specialized Pivot Lock for Clause 4.4.1 Content
             if "The Contractor shall reference the following documents" in normalized_txt or "Contractor shall reference the following documents" in normalized_txt:
                 capture_req = True
                 if normalized_txt not in security_requirements:
                     security_requirements.append(normalized_txt)
                 continue
-            elif "4.4.2" in normalized_txt or "Where necessary" in normalized_txt:
+            elif "4.4.2" in normalized_txt or "Where necessary" in normalized_txt or "4.5" in normalized_txt:
                 capture_req = False
 
             if capture_scope and len(normalized_txt) > 0:
@@ -250,7 +239,6 @@ def process_dynamic_telemetry(wab_path):
                             system_description_text += "\\n" + normalized_txt
 
             if capture_req and len(normalized_txt) > 0:
-                # Append subsequent numbered points into the Section 8 registry bucket
                 if normalized_txt not in security_requirements and "government regulations" not in normalized_txt.lower():
                     security_requirements.append(normalized_txt)
                         
@@ -335,7 +323,6 @@ def generate_sa_report(telemetry, template_path, filename):
         normalized_p_text = full_p_text.replace('\\n', ' ').strip()
         lower_normalized = normalized_p_text.lower()
         
-        # Front title page date layout configuration overlay
         if p_idx < 15 and ("may 2026" in lower_normalized or "june 2026" in lower_normalized):
             p.text = current_date_text
             for run in p.runs:
@@ -361,16 +348,17 @@ def generate_sa_report(telemetry, template_path, filename):
                 for msg in telemetry["objective_paragraphs"][1:]:
                     current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
             else: p.text = ""
-        # Match template's internal Section 4.4 anchor text to dump extracted compliance standards
+        # Match Section 8 target placeholder strictly
         elif "copy from wab section 4.4" in lower_normalized or "copy from wab section 8" in lower_normalized or "copy from wab, section 4.4" in lower_normalized:
             p.text = f"{company_abbr} referred to the following baseline requirements from the Work Assignment Brief (WAB) in conducting the security audit assessment:"
             current_anchor = p
-            if len(telemetry["security_requirements"]) > 0:
+            
+            # Enforce dynamic injection from WAB if successful, otherwise map the 18 points directly
+            if len(telemetry["security_requirements"]) > 1:
                 for msg in telemetry["security_requirements"]:
                     current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
             else:
-                # Built-in strict programmatic alignment mapping fallback
-                fallback_items = [
+                explicit_18_points = [
                     "The Contractor shall reference the following documents when performing security risk assessment and security audit. The requirements listed in these reference documents together form the “Security Baseline” for the assessment and audit:",
                     "(i) Baseline IT Security Policy;",
                     "(ii) IT Security Guidelines;",
@@ -391,7 +379,7 @@ def generate_sa_report(telemetry, template_path, filename):
                     "(xvii) Security Testing Report Template for iAM Smart-enabled Online Services;",
                     "(xviii) The House Rules of iAM Smart."
                 ]
-                for item in fallback_items:
+                for item in explicit_18_points:
                     current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
         else:
             replace_text_in_paragraph(p, replacements)
