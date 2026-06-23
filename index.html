@@ -132,7 +132,7 @@
                 return;
             }
 
-            // DYNAMIC DATE RESOLUTION ENGINE: Extracted from client runtime time zone states
+            // DYNAMIC DATE RESOLUTION ENGINE: Extracted from client browser metrics runtime
             const today = new Date();
             const monthText = today.toLocaleDateString("en-US", { month: "long" });
             const yearText = today.getFullYear();
@@ -190,7 +190,7 @@ testee_abbr = JS_TESTEE_ABBREVIATION
 current_date_text = JS_COMPUTED_DATE_TEXT
 current_date_numeric = JS_COMPUTED_DATE_NUMERIC
 
-print(f"Executing clean SA structural build for: {sys_name}")
+print(f"Executing deep SA text pivot scan for: {sys_name}")
 
 def process_dynamic_telemetry(wab_path):
     scope_paragraphs, objective_paragraphs, security_requirements = [], [], []
@@ -222,7 +222,7 @@ def process_dynamic_telemetry(wab_path):
             elif "4.1.2" in normalized_txt or "Project Management" in normalized_txt:
                 capture_desc = False
 
-            # Pivot target rule for section 4.4.1 compliance points
+            # Specialized Pivot Lock for Clause 4.4.1 Content
             if "The Contractor shall reference the following documents" in normalized_txt or "Contractor shall reference the following documents" in normalized_txt:
                 capture_req = True
                 continue
@@ -270,7 +270,7 @@ def process_dynamic_telemetry(wab_path):
 def generate_sa_report(telemetry, template_path, filename):
     doc = Document(template_path)
 
-    # Cleaned replacement matrix resolving repeating template suffixes
+    # Re-ordered replacement arrays to isolate and clean trailing suffix duplications completely
     replacements = [
         ("*company name* Limited", company_name),
         ("*company name*", company_name),
@@ -333,7 +333,7 @@ def generate_sa_report(telemetry, template_path, filename):
         p_element.addnext(new_p._p)
         return new_p
 
-    # Positional Lock Sentry Flag to guarantee Section 8 fires exactly once
+    # Sentry indicator tracking to prevent repetitive loop executions
     has_populated_section_8 = False
 
     # Sweep Body Elements Matrix
@@ -349,8 +349,12 @@ def generate_sa_report(telemetry, template_path, filename):
                 run.font.size = Pt(12)
             continue
 
-        # Strict Multi-run Interceptor Gate for Section 8 Security Baseline
-        if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) or ("referredto" in lower_normalized and "conductingthesecurity" in lower_normalized):
+        # Skip modifying the main section heading title completely to preserve template structure
+        if "8.securityrequirements" in lower_normalized:
+            continue
+
+        # Match placeholder rows precisely to dump isolated bulleted requirements cleanly
+        if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) or ("conductingthesecurityaudit" in lower_normalized):
             if not has_populated_section_8:
                 has_populated_section_8 = True
                 p.text = f"{company_abbr} referred to the following documents in conducting the security audit:"
@@ -383,7 +387,7 @@ def generate_sa_report(telemetry, template_path, filename):
                     for item in explicit_18_points:
                         current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
             else:
-                # Completely blank out subsequent broken multi-run copies to remove repetitions
+                # Clear secondary broken placeholder character run blocks to eradicate repetitive text strings
                 p.text = ""
         elif "copy from WAB, 4.1.1 Current Environment Description" in normalized_p_text or "copy from WAB, 9.1 System Description" in normalized_p_text:
             p.text = telemetry["system_description"]
@@ -436,7 +440,7 @@ def generate_sa_report(telemetry, template_path, filename):
             except Exception: pass
 
     doc.save(filename)
-    print("SA Report compiled successfully without trailing repetitions.")
+    print("SA Report compiled successfully with Section 8 fixed headers.")
 
 telemetry = process_dynamic_telemetry(JS_WAB_NAME)
 generate_sa_report(telemetry, "sa_template.docx", "Generated_SA_Report_Final.docx")
