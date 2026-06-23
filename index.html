@@ -142,7 +142,7 @@
             const monthNum = String(today.getMonth() + 1).padStart(2, '0');
             const computedDateNumeric = `${dayNum}-${monthNum}-${yearText}`;
 
-            logToConsole(`Date Pipeline Sync: Active Execution Target Set to ${computedDateText} (${computedDateNumeric})`);
+            logToConsole(`Date Pipeline Sync: Active Target Configured to ${computedDateText}`);
 
             logToConsole("Pulling template document via relative repo tree check...");
             try {
@@ -190,8 +190,6 @@ testee_abbr = JS_TESTEE_ABBREVIATION
 current_date_text = JS_COMPUTED_DATE_TEXT
 current_date_numeric = JS_COMPUTED_DATE_NUMERIC
 
-print(f"Executing clean SA structural build for: {sys_name}")
-
 def process_dynamic_telemetry(wab_path):
     scope_paragraphs, objective_paragraphs, security_requirements = [], [], []
     system_description_text = ""
@@ -222,7 +220,6 @@ def process_dynamic_telemetry(wab_path):
             elif "4.1.2" in normalized_txt or "Project Management" in normalized_txt:
                 capture_desc = False
 
-            # Pivot target lock for section 4.4.1 compliance points
             if "The Contractor shall reference the following documents" in normalized_txt or "Contractor shall reference the following documents" in normalized_txt:
                 capture_req = True
                 continue
@@ -332,7 +329,6 @@ def generate_sa_report(telemetry, template_path, filename):
         p_element.addnext(new_p._p)
         return new_p
 
-    # Sentry positional lock flag to guarantee Section 8 writes exactly once
     has_populated_section_8 = False
 
     # Sweep Body Elements Matrix
@@ -348,11 +344,11 @@ def generate_sa_report(telemetry, template_path, filename):
                 run.font.size = Pt(12)
             continue
 
-        # CRITICAL PROTECTION GATE: Protect heading title elements from loose string matches
-        if re.match(r'^8\.\s+security', lower_normalized) or "8.securityrequirements" in lower_normalized:
+        # POSITIONAL LOCK GATE: Skip checking or editing if it is the bold title header block
+        if "8.securityrequirements" in lower_normalized or normalized_p_text.startswith("8."):
             continue
 
-        # Target placeholder row to dump extracted isolated bullets
+        # Intercept and modify only the description text row beneath the title block
         if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) or ("conductingthesecurityaudit" in lower_normalized):
             if not has_populated_section_8:
                 has_populated_section_8 = True
@@ -386,8 +382,8 @@ def generate_sa_report(telemetry, template_path, filename):
                     for item in explicit_18_points:
                         current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
             else:
-                # Overwrite multi-run broken fragment stutters cleanly to remove trailing repetitions
                 p.text = ""
+                
         elif "copy from WAB, 4.1.1 Current Environment Description" in normalized_p_text or "copy from WAB, 9.1 System Description" in normalized_p_text:
             p.text = telemetry["system_description"]
         elif "insert all under brief of work assignment under category b, 1. Scope of the services, 1.1" in normalized_p_text:
@@ -439,7 +435,7 @@ def generate_sa_report(telemetry, template_path, filename):
             except Exception: pass
 
     doc.save(filename)
-    print("SA Report compiled successfully with Section 8 headings locked.")
+    print("SA Report compiled successfully with section titles protected.")
 
 telemetry = process_dynamic_telemetry(JS_WAB_NAME)
 generate_sa_report(telemetry, "sa_template.docx", "Generated_SA_Report_Final.docx")
