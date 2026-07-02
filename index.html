@@ -291,7 +291,7 @@ def apply_text_styling_and_borders(cell, text):
         tcBorders.append(border)
     tcPr.append(tcBorders)
 
-# Master Static Token Map (Dates are evaluated dynamically via regex below)
+# Master Static Token Map
 replacements = [
     ("*company name* Limited", company_name),
     ("*company name*", company_name),
@@ -312,8 +312,8 @@ replacements = [
     ("COMPANY ABBREVIATION", company_abbr)
 ]
 
-# Automated Regex-Driven Calendar Transformer Pass Engine
-def process_token_replacements(p, lookup_tuples, preserve_formatting=False):
+# Automated Regex-Driven Calendar Transformer Engine with character-run slicing preservation logic
+def process_token_replacements(p, lookup_tuples):
     full_text = "".join(run.text for run in p.runs)
     if not full_text.strip(): return
     
@@ -330,17 +330,17 @@ def process_token_replacements(p, lookup_tuples, preserve_formatting=False):
         full_text = re.sub(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\s+to\\s+\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', target_range, full_text)
         modified = True
 
-    # Pattern 3: Matches single standalone day logs (e.g., 27 March 2026)
+    # Pattern 3: Matches standalone day logs (e.g., 27 March 2026)
     elif re.search(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', full_text):
         full_text = re.sub(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', f"{day_str} {current_date_text}", full_text)
         modified = True
 
-    # Pattern 4: Matches any long literal Month Year expression (e.g., May 2026)
+    # Pattern 4: Matches long literal Month Year expressions (e.g., May 2026)
     elif re.search(r'\\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}\\b', full_text):
         full_text = re.sub(r'\\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}\\b', current_date_text, full_text)
         modified = True
 
-    # Run remaining explicit text dictionary substitutions
+    # Run explicit token dictionary string substitutions
     for k, val in lookup_tuples:
         if k.lower() in full_text.lower() or k.strip("*").strip().lower() in full_text.lower():
             pattern = re.compile(re.escape(k), re.IGNORECASE)
@@ -348,26 +348,19 @@ def process_token_replacements(p, lookup_tuples, preserve_formatting=False):
             modified = True
             
     if modified:
-        if preserve_formatting:
-            # Safely inject content back across runs while conserving font styles/sizes
-            remaining_text = full_text
-            for run in p.runs:
-                if not remaining_text:
-                    run.text = ""
-                    continue
-                run_len = len(run.text) if run.text else 0
-                if run_len == 0:
-                    continue
-                # Fill this run slice with mutated content matching original sizing parameters
-                run.text = remaining_text[:run_len]
-                remaining_text = remaining_text[run_len:]
-            if remaining_text and p.runs:
-                p.runs[-1].text += remaining_text
-        else:
-            if p.runs:
-                p.runs[0].text = full_text
-                for r in p.runs[1:]: r.text = ""
-            else: p.text = full_text
+        # Precision Slicing Implementation: Injects data across runs while conserving font parameters perfectly
+        remaining_text = full_text
+        for run in p.runs:
+            if not remaining_text:
+                run.text = ""
+                continue
+            run_len = len(run.text) if run.text else 0
+            if run_len == 0:
+                continue
+            run.text = remaining_text[:run_len]
+            remaining_text = remaining_text[run_len:]
+        if remaining_text and p.runs:
+            p.runs[-1].text += remaining_text
 
 print("Injecting compiled variables into target SA layout sections...")
 doc = Document("SA_template.docx")
@@ -375,25 +368,15 @@ doc = Document("SA_template.docx")
 # Recursive structural mapping loop across headers/footers with font size preservation
 for section in doc.sections:
     for header_p in section.header.paragraphs: 
-        process_token_replacements(header_p, replacements, preserve_formatting=True)
+        process_token_replacements(header_p, replacements)
     for footer_p in section.footer.paragraphs: 
-        process_token_replacements(footer_p, replacements, preserve_formatting=True)
+        process_token_replacements(footer_p, replacements)
 
 has_populated_section_8 = False
 
 for p_idx, p in enumerate(list(doc.paragraphs)):
     lower_normalized = p.text.lower().replace(" ", "").replace(",", "")
     
-    # Guard Title Page Layout Sizing Configurations Explicitly
-    is_title_component = p_idx < 15 or p.style.name.startswith("Heading") or "title" in p.style.name.lower()
-
-    if p_idx < 15 and ("may 2026" in p.text.lower() or "june 2026" in p.text.lower()):
-        p.text = current_date_text
-        for run in p.runs:
-            run.font.name = "Times New Roman"
-            run.font.size = Pt(12)
-        continue
-
     if "8.securityrequirements" in lower_normalized or p.style.name.startswith("Heading"): 
         continue
 
@@ -433,7 +416,7 @@ for p_idx, p in enumerate(list(doc.paragraphs)):
                 pass
             
     else:
-        process_token_replacements(p, replacements, preserve_formatting=is_title_component)
+        process_token_replacements(p, replacements)
 
 # Process Table Structures (Change Control & Sign-Off Blocks)
 for table in doc.tables:
@@ -460,7 +443,7 @@ for table in doc.tables:
     for row in table.rows:
         for cell in row.cells:
             for cell_p in cell.paragraphs: 
-                process_token_replacements(cell_p, replacements, preserve_formatting=True)
+                process_token_replacements(cell_p, replacements)
 
 print("Performing final global asterisk sanitization cleanup pass...")
 # Sanitize regular body text paragraphs
