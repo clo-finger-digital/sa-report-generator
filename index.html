@@ -314,7 +314,7 @@ replacements = [
     ("COMPANY ABBREVIATION", company_abbr)
 ]
 
-# Accurate Font Preservation Substitution Module (SRA Core logic alignment)
+# SRA Style Token Replacement Engine: Overwrites first run text completely to lock font styles perfectly
 def process_token_replacements(p, lookup_tuples):
     full_text = "".join(run.text for run in p.runs)
     if not full_text.strip(): return
@@ -351,8 +351,7 @@ def process_token_replacements(p, lookup_tuples):
             
     if modified:
         if p.runs:
-            # SRA Alignment Fix: Assign updated text string entirely to run index zero 
-            # to preserve the true template container font configurations seamlessly.
+            # SRA Fix: Feed combined text into the first run and empty subsequent runs to lock layout metrics
             p.runs[0].text = full_text
             for r in p.runs[1:]: 
                 r.text = ""
@@ -362,7 +361,7 @@ def process_token_replacements(p, lookup_tuples):
 print("Injecting compiled variables into target SA layout sections...")
 doc = Document("SA_template.docx")
 
-# Recursive structural mapping loop across headers/footers
+# Recursive structural mapping loop across headers/footers with font size preservation
 for section in doc.sections:
     for header_p in section.header.paragraphs: 
         process_token_replacements(header_p, replacements)
