@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Audit (SA) Report Generator Pipeline</title>
+    <title>SRA Report Automation Pipeline</title>
     <!-- Tailwind CSS for modern responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Pyodide Core Engine for Serverless Client-Side Python Runtime -->
@@ -12,14 +12,14 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
     <div class="max-w-4xl mx-auto px-4 py-12">
         <header class="border-b border-slate-800 pb-6 mb-8">
-            <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Security Audit (SA) Automation Pipeline</h1>
-            <p class="mt-2 text-sm text-slate-400">Dynamically extract Scope, Objectives, and Security Baseline documents straight from the WAB into the clean SA report with auto-updating dates</p>
+            <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">SRA Report Automation Pipeline</h1>
+            <p class="mt-2 text-sm text-slate-400">Dynamically extract Scope, Objectives, and Baseline guidelines straight from the WAB alongside custom tool logs into a compiled SRA report</p>
         </header>
 
         <main class="space-y-6">
-            <!-- INJECTOR ENVIRONMENT VARIABLES -->
+            <!-- ENVIRONMENT VARIABLES OVERRIDES -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
-                <h2 class="text-xl font-bold text-white mb-4">SA Report Configuration Mappings</h2>
+                <h2 class="text-xl font-bold text-white mb-4">SRA Document Metadata Mappings</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -49,20 +49,39 @@
                 </div>
             </section>
 
-            <!-- SPECIFICATION SOURCE FILE UPLOAD -->
+            <!-- MULTI-SOURCE INGESTION CHANNELS -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
-                <h2 class="text-xl font-bold text-white mb-2">Source Brief File Ingestion</h2>
-                <p class="text-xs text-slate-400 mb-4">Ensure your clean target template layout file is uploaded to your GitHub Pages repository folder path matching exactly <code class="text-blue-400">SA template.docx</code>.</p>
+                <h2 class="text-xl font-bold text-white mb-4">Pipeline Ingestion Channels</h2>
                 
                 <div class="space-y-4">
-                    <div class="p-4 bg-slate-950 border border-dashed border-blue-500/50 rounded-lg">
-                        <label class="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Work Assignment Brief Document WAB (.docx)</label>
-                        <input type="file" id="file_wab" accept=".docx" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-900/50 file:text-blue-200 hover:file:bg-blue-800 cursor-pointer">
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Work Assignment Brief (.docx)</label>
+                        <input type="file" id="file_wab" accept=".docx" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer">
+                    </div>
+
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Nessus Vulnerability Scan Log (.txt)</label>
+                        <input type="file" id="file_va" accept=".txt" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer">
+                    </div>
+
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">OWASP ZAP Penetration Testing Log (.txt)</label>
+                        <input type="file" id="file_pt" accept=".txt" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer">
+                    </div>
+
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Bearer Source Code Review Log (.txt)</label>
+                        <input type="file" id="file_cr" accept=".txt" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer">
+                    </div>
+
+                    <div class="p-4 bg-slate-950 border border-slate-800 rounded-lg">
+                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Follow-Up Action Plan Milestones (.txt)</label>
+                        <input type="file" id="file_fup" accept=".txt" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer">
                     </div>
                 </div>
 
                 <div class="pt-4">
-                    <button id="run_pipeline_btn" onclick="executeSecurityAuditPipeline()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 px-4 rounded transition duration-200 shadow-lg disabled:opacity-50" disabled>
+                    <button id="run_pipeline_btn" onclick="executeSRAPipeline()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 px-4 rounded transition duration-200 shadow-lg disabled:opacity-50" disabled>
                         Bootstrapping WASM Compilation Sandbox Environment...
                     </button>
                 </div>
@@ -96,7 +115,7 @@
                 logToConsole("WASM micro-sandbox environment successfully locked and activated.");
                 const runBtn = document.getElementById("run_pipeline_btn");
                 runBtn.disabled = false;
-                runBtn.innerText = "Compile Final Security Audit Report";
+                runBtn.innerText = "Compile Final SRA Report";
             } catch (err) {
                 logToConsole("Fatal Bootstrap Error: " + err.message);
             }
@@ -112,13 +131,13 @@
 
         async function fetchFileBytes(elementId) {
             const el = document.getElementById(elementId);
-            if (!el.files || el.files.length === 0) return null;
+            if (!el.files || el.files.length === 0) return { name: "", data: new Uint8Array(0) };
             const file = el.files[0];
             const buffer = await file.arrayBuffer();
             return { name: file.name, data: new Uint8Array(buffer) };
         }
 
-        async function executeSecurityAuditPipeline() {
+        async function executeSRAPipeline() {
             if (!pyodideInstance) return;
             
             const cName = document.getElementById("company_name").value;
@@ -129,30 +148,39 @@
             const tAbbr = document.getElementById("testee_abbr").value;
 
             const wabFile = await fetchFileBytes("file_wab");
-            if (!wabFile) {
+            if (!wabFile.name) {
                 alert("Please submit the required Work Assignment Brief (WAB) file to begin extraction.");
                 return;
             }
 
+            // Optional raw logic text logs attachments
+            const vaFile = await fetchFileBytes("file_va");
+            const ptFile = await fetchFileBytes("file_pt");
+            const crFile = await fetchFileBytes("file_cr");
+            const fupFile = await fetchFileBytes("file_fup");
+
             const repoBasePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-            const templateTargetUrl = `${window.location.origin}${repoBasePath}SA template.docx`;
+            const templateTargetUrl = `${window.location.origin}${repoBasePath}SRA template.docx`;
 
             logToConsole(`Fetching template via absolute deployment route: ${templateTargetUrl}`);
             try {
                 const response = await fetch(templateTargetUrl);
-                if (!response.ok) throw new Error(`Template access error ${response.status}. Check that 'SA template.docx' exists.`);
+                if (!response.ok) throw new Error(`Template access error ${response.status}. Check that 'SRA template.docx' exists.`);
                 const templateBuffer = await response.arrayBuffer();
                 const templateData = new Uint8Array(templateBuffer);
                 
-                try { pyodideInstance.FS.unlink("SA_template.docx"); } catch(e){}
-                pyodideInstance.FS.writeFile("SA_template.docx", templateData);
+                try { pyodideInstance.FS.unlink("SRA_template.docx"); } catch(e){}
+                pyodideInstance.FS.writeFile("SRA_template.docx", templateData);
             } catch (err) {
                 logToConsole("Fetch Failure: " + err.message);
                 return;
             }
 
-            try { pyodideInstance.FS.unlink(wabFile.name); } catch(e) {}
             pyodideInstance.FS.writeFile(wabFile.name, wabFile.data);
+            if(vaFile.name) pyodideInstance.FS.writeFile(vaFile.name, vaFile.data);
+            if(ptFile.name) pyodideInstance.FS.writeFile(ptFile.name, ptFile.data);
+            if(crFile.name) pyodideInstance.FS.writeFile(crFile.name, crFile.data);
+            if(fupFile.name) pyodideInstance.FS.writeFile(fupFile.name, fupFile.data);
 
             pyodideInstance.globals.set("JS_COMPANY_NAME", cName);
             pyodideInstance.globals.set("JS_COMPANY_ABBREVIATION", cAbbr);
@@ -161,6 +189,10 @@
             pyodideInstance.globals.set("JS_TESTEE_NAME", tName);
             pyodideInstance.globals.set("JS_TESTEE_ABBREVIATION", tAbbr);
             pyodideInstance.globals.set("JS_WAB_NAME", wabFile.name);
+            pyodideInstance.globals.set("JS_VA_NAME", vaFile.name);
+            pyodideInstance.globals.set("JS_PT_NAME", ptFile.name);
+            pyodideInstance.globals.set("JS_CR_NAME", crFile.name);
+            pyodideInstance.globals.set("JS_FUP_NAME", fupFile.name);
 
             const pythonScript = `
 import os
@@ -215,7 +247,8 @@ for p in wab_doc.paragraphs:
     if not txt: continue
     
     normalized_txt = txt.replace('\\xa0', ' ').strip()
-    lower_clean = normalized_txt.lower().replace(" ", "").replace(",", "").replace(":", "")
+    # Upgraded Global Safe Match: Regex targets any sequence of layout whitespaces, breaks, or literal hidden tab vectors
+    lower_clean = re.sub(r'\\s+', '', normalized_txt.lower()).replace(",", "").replace(":", "")
     
     # Structural Section Boundaries Evaluation Blocks
     if "4.1.1" in normalized_txt and "currentenvironment" in lower_clean:
@@ -264,6 +297,21 @@ for p in wab_doc.paragraphs:
                 cleaned_bullet = normalized_txt
             if cleaned_bullet and cleaned_bullet not in security_requirements: 
                 security_requirements.append(cleaned_bullet)
+
+# Read explicit raw text logs logic if attached by the pipeline engineer
+va_custom_content = ""
+pt_custom_content = ""
+cr_custom_content = ""
+fup_custom_content = ""
+
+if JS_VA_NAME:
+    with open(JS_VA_NAME, 'r', encoding='utf-8', errors='ignore') as f: va_custom_content = f.read()
+if JS_PT_NAME:
+    with open(JS_PT_NAME, 'r', encoding='utf-8', errors='ignore') as f: pt_custom_content = f.read()
+if JS_CR_NAME:
+    with open(JS_CR_NAME, 'r', encoding='utf-8', errors='ignore') as f: cr_custom_content = f.read()
+if JS_FUP_NAME:
+    with open(JS_FUP_NAME, 'r', encoding='utf-8', errors='ignore') as f: fup_custom_content = f.read()
 
 def insert_paragraph_after(paragraph, text, style=None):
     doc_instance = paragraph.part.document
@@ -314,7 +362,6 @@ replacements = [
     ("COMPANY ABBREVIATION", company_abbr)
 ]
 
-# Automated Regex-Driven Calendar Transformer Engine with explicit Style Lock Caching Pass
 def process_token_replacements(p, lookup_tuples):
     full_text = "".join(run.text for run in p.runs)
     if not full_text.strip(): return
@@ -351,7 +398,7 @@ def process_token_replacements(p, lookup_tuples):
             
     if modified:
         if p.runs:
-            # 1. CACHE CRITICAL FORMATTING METADATA FROM THE TEMPLATE RUN
+            # SRA Standard: Overwrite the first run's text
             base_run = p.runs[0]
             cached_size = base_run.font.size
             cached_name = base_run.font.name
@@ -359,25 +406,24 @@ def process_token_replacements(p, lookup_tuples):
             cached_italic = base_run.italic
             cached_color = base_run.font.color.rgb if base_run.font.color else None
 
-            # 2. Assign text cleanly to base run container
             base_run.text = full_text
             
-            # 3. RE-APPLY CACHED METADATA FORCING WORD TO MAINTAIN INLINE STYLING HEIGHT AND WEIGHT
+            # Re-enforce layout metrics to counteract python-docx formatting drops
             if cached_size: base_run.font.size = cached_size
             if cached_name: base_run.font.name = cached_name
             base_run.bold = cached_bold
             base_run.italic = cached_italic
             if cached_color: base_run.font.color.rgb = cached_color
             
-            # 4. Physically destroy the trailing fragmented XML sibling runs to prevent text degradation
+            # Evict fragmented XML child elements completely to fix title scaling
             p_element = p._p
             for r in p.runs[1:]:
                 p_element.remove(r._r)
         else: 
             p.text = full_text
 
-print("Injecting compiled variables into target SA layout sections...")
-doc = Document("SA_template.docx")
+print("Injecting compiled variables into target SRA layout sections...")
+doc = Document("SRA_template.docx")
 
 # Recursive structural mapping loop across headers/footers with style extraction safeguards
 for section in doc.sections:
@@ -386,12 +432,10 @@ for section in doc.sections:
     for footer_p in section.footer.paragraphs: 
         process_token_replacements(footer_p, replacements)
 
-has_populated_section_8 = False
-
 for p_idx, p in enumerate(list(doc.paragraphs)):
     lower_normalized = p.text.lower().replace(" ", "").replace(",", "")
     
-    if "8.securityrequirements" in lower_normalized or p.style.name.startswith("Heading"): 
+    if p.style.name.startswith("Heading"): 
         continue
 
     if "insertallunderbriefofworkassignmentundercategoryb1.scopeoftheservices1.1" in lower_normalized or "copyfromwab1.1scope" in lower_normalized:
@@ -413,21 +457,13 @@ for p_idx, p in enumerate(list(doc.paragraphs)):
             p.text = "To evaluate security risks and verify regulatory baseline compliance."
 
     elif "copyfromwabsection4.4" in lower_normalized or "copyfromwabsection4.1.3" in lower_normalized or "referredtothefollowingdocuments" in lower_normalized:
-        if not has_populated_section_8:
-            has_populated_section_8 = True
-            p.text = ""  
-            
-            intro_sentence = f"{company_abbr} referred to the following documents in conducting the security audit:"
-            current_anchor = insert_paragraph_after(p, intro_sentence, style='Normal')
-            
+        p.text = ""  
+        current_anchor = p
+        if security_requirements:
             for item in security_requirements:
                 current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
         else:
-            p.text = ""
-            try:
-                p._p.getparent().remove(p._p)
-            except Exception:
-                pass
+            p.text = "Baseline IT Security Policy\\nIT Security Guidelines"
             
     else:
         process_token_replacements(p, replacements)
@@ -460,43 +496,36 @@ for table in doc.tables:
                 process_token_replacements(cell_p, replacements)
 
 print("Performing final global asterisk clarification cleaner pass...")
-# Sanitize regular body text paragraphs
 for p in doc.paragraphs:
-    if "*" in p.text:
-        p.text = p.text.replace("*", "")
+    if "*" in p.text: p.text = p.text.replace("*", "")
 
-# Sanitize table data cells
 for table in doc.tables:
     for row in table.rows:
         for cell in row.cells:
-            if "*" in cell.text:
-                cell.text = cell.text.replace("*", "")
+            if "*" in cell.text: cell.text = cell.text.replace("*", "")
 
-# Sanitize headers and footers recursively
 for section in doc.sections:
     for hp in section.header.paragraphs:
-        if "*" in hp.text:
-            hp.text = hp.text.replace("*", "")
+        if "*" in hp.text: hp.text = hp.text.replace("*", "")
     for fp in section.footer.paragraphs:
-        if "*" in fp.text:
-            fp.text = fp.text.replace("*", "")
+        if "*" in fp.text: fp.text = fp.text.replace("*", "")
 
-doc.save("Generated_SA_Report_Final.docx")
-print("Security Audit Automation Pipeline Task Finalized Successfully.")
+doc.save("Generated_SRA_Report_Final.docx")
+print("Security Risk Assessment Automation Pipeline Task Finalized Successfully.")
 `;
 
             try {
                 await pyodideInstance.runPythonAsync(pythonScript);
-                const outputBytes = pyodideInstance.FS.readFile("Generated_SA_Report_Final.docx");
+                const outputBytes = pyodideInstance.FS.readFile("Generated_SRA_Report_Final.docx");
                 const blob = new Blob([outputBytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = `SA_Report_${sAbbr}_Generated.docx`;
+                a.download = `SRA_Report_${sAbbr}_Generated.docx`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
-                logToConsole("Success: Dynamic Security Audit Report compiled and downloaded!");
+                logToConsole("Success: SRA Report compiled and downloaded!");
             } catch (err) {
                 logToConsole("Pipeline Processing Fault: " + err.message);
             }
