@@ -134,19 +134,24 @@
                 return;
             }
 
-            logToConsole("Fetching 'SA template.docx' baseline configuration via repository branch...");
-            try {
-                const response = await fetch("./SA%20template_2.docx");
-                if (!response.ok) throw new Error("Template access error 404. Verify 'SA template.docx' exists in the base path route repository.");
-                const templateBuffer = await response.arrayBuffer();
-                const templateData = new Uint8Array(templateBuffer);
-                
-                try { pyodideInstance.FS.unlink("SA_template_2.docx"); } catch(e){}
-                pyodideInstance.FS.writeFile("SA_template_2.docx", templateData);
-            } catch (err) {
-                logToConsole("Fetch Failure: " + err.message);
-                return;
-            }
+            // Dynamically compute the base deployment URL directory path for GitHub Pages
+        const repoBasePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+        const templateTargetUrl = `${window.location.origin}${repoBasePath}SA template.docx`;
+
+        logToConsole(`Fetching template via absolute deployment route: ${templateTargetUrl}`);
+        try {
+            const response = await fetch(templateTargetUrl);
+            if (!response.ok) throw new Error(`Template access error ${response.status}. Check that 'SA template.docx' is accurately spelled and tracked in your repository.`);
+            const templateBuffer = await response.arrayBuffer();
+            const templateData = new Uint8Array(templateBuffer);
+    
+            // Ensure file names are tracked consistently inside the virtual filesystem sandbox
+            try { pyodideInstance.FS.unlink("SA_template_2.docx"); } catch(e){}
+            pyodideInstance.FS.writeFile("SA_template_2.docx", templateData);
+        } catch (err) {
+            logToConsole("Fetch Failure: " + err.message);
+            return;
+        }
 
             try { pyodideInstance.FS.unlink(wabFile.name); } catch(e) {}
             pyodideInstance.FS.writeFile(wabFile.name, wabFile.data);
