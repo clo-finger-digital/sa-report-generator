@@ -52,7 +52,7 @@
             <!-- SPECIFICATION SOURCE FILE UPLOAD -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
                 <h2 class="text-xl font-bold text-white mb-2">Source Brief File Ingestion</h2>
-                <p class="text-xs text-slate-400 mb-4">Ensure your clean target template layout file is uploaded to your GitHub Pages repository folder path matching exactly <code class="text-blue-400">SA template_2.docx</code>.</p>
+                <p class="text-xs text-slate-400 mb-4">Ensure your clean target template layout file is uploaded to your GitHub Pages repository folder path matching exactly <code class="text-blue-400">SA template.docx</code>.</p>
                 
                 <div class="space-y-4">
                     <div class="p-4 bg-slate-950 border border-dashed border-blue-500/50 rounded-lg">
@@ -134,10 +134,10 @@
                 return;
             }
 
-            logToConsole("Fetching 'SA template_2.docx' baseline configuration via repository branch...");
+            logToConsole("Fetching 'SA template.docx' baseline configuration via repository branch...");
             try {
                 const response = await fetch("./SA%20template_2.docx");
-                if (!response.ok) throw new Error("Template access error 404. Verify 'SA template_2.docx' exists in the base path route repository.");
+                if (!response.ok) throw new Error("Template access error 404. Verify 'SA template.docx' exists in the base path route repository.");
                 const templateBuffer = await response.arrayBuffer();
                 const templateData = new Uint8Array(templateBuffer);
                 
