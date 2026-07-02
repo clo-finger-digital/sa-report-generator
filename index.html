@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SA Report Automation Hub</title>
+    <title>Security Audit (SA) Report Generator Pipeline</title>
+    <!-- Tailwind CSS for modern responsive styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pyodide Core Engine for Serverless Client-Side Python Runtime -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
     <div class="max-w-4xl mx-auto px-4 py-12">
         <header class="border-b border-slate-800 pb-6 mb-8">
-            <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">SA Report Pipeline Hub</h1>
-            <p class="mt-2 text-sm text-slate-400">Execute unrestricted pure Python compilation for the Security Audit report inside the browser</p>
+            <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Security Audit (SA) Automation Pipeline</h1>
+            <p class="mt-2 text-sm text-slate-400">Dynamically extract Scope, Objectives, and Security Baseline documents straight from the WAB into the clean SA report</p>
         </header>
 
         <main class="space-y-6">
+            <!-- INJECTOR ENVIRONMENT VARIABLES VARIABLES -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
-                <h2 class="text-xl font-bold text-white mb-4">Pipeline Injector Variables</h2>
+                <h2 class="text-xl font-bold text-white mb-4">SA Report Configuration Mappings</h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -46,55 +49,59 @@
                 </div>
             </section>
 
+            <!-- MANDATORY BASELINE SPEC UPLOAD -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
-                <h2 class="text-xl font-bold text-white mb-2">Data Source File Uploads</h2>
-                <p class="text-xs text-slate-400 mb-4">Note: The target SA Template document is automatically pulled directly from your relative repository tree path.</p>
+                <h2 class="text-xl font-bold text-white mb-2">Source Brief File Ingestion</h2>
+                <p class="text-xs text-slate-400 mb-4">Ensure your clean target template layout file is uploaded to your GitHub Pages repository folder path matching exactly <code class="text-blue-400">SA template.docx</code>.</p>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 bg-slate-950 border border-dashed border-blue-500/50 rounded-lg md:col-span-2">
-                        <label class="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">WAB Brief Document (.docx) *Required</label>
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-950 border border-dashed border-blue-500/50 rounded-lg">
+                        <label class="block text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Work Assignment Brief Document WAB (.docx)</label>
                         <input type="file" id="file_wab" accept=".docx" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-900/50 file:text-blue-200 hover:file:bg-blue-800 cursor-pointer">
                     </div>
                 </div>
 
                 <div class="pt-4">
-                    <button id="run_pipeline_btn" onclick="executePythonPipeline()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 px-4 rounded transition duration-200 shadow-lg disabled:opacity-50">
-                        Compile SA Report
+                    <button id="run_pipeline_btn" onclick="executeSecurityAuditPipeline()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 px-4 rounded transition duration-200 shadow-lg disabled:opacity-50" disabled>
+                        Bootstrapping WASM Compilation Sandbox Environment...
                     </button>
                 </div>
             </section>
 
+            <!-- CONSOLE EXECUTION TRACKER LOG WINDOW -->
             <section class="bg-slate-950 rounded-lg border border-slate-800 p-4 shadow-inner">
-                <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">System Execution Log</span>
-                <pre id="console_output" class="text-xs font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap max-h-64">System initialized. Waiting for source files...</pre>
+                <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">System Compilation Real-Time Monitor</span>
+                <pre id="console_output" class="text-xs font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap max-h-64">Runtime staging trace initialized...</pre>
             </section>
         </main>
     </div>
 
     <script>
-        let pyodideModule = null;
+        let pyodideInstance = null;
 
-        async function initPyodide() {
+        async function initPipelineWasm() {
             try {
-                logToConsole("Loading Pyodide Core Engine...");
-                pyodideModule = await loadPyodide();
+                logToConsole("Initializing client-side WebAssembly compiler environment...");
+                pyodideInstance = await loadPyodide();
                 
-                logToConsole("Loading core package manager (micropip)...");
-                await pyodideModule.loadPackage(["micropip", "pandas"]);
+                logToConsole("Fetching python distribution package installer (micropip)...");
+                await pyodideInstance.loadPackage("micropip");
                 
-                logToConsole("Installing python-docx library package...");
-                await pyodideModule.runPythonAsync(`
+                logToConsole("Compiling dependencies in-browser: python-docx file handler...");
+                await pyodideInstance.runPythonAsync(`
                     import micropip
-                    await micropip.install('openpyxl')
                     await micropip.install('python-docx')
                 `);
                 
-                logToConsole("Environment Ready. All system dependencies successfully loaded into the browser sandbox!");
+                logToConsole("WASM micro-sandbox environment successfully locked and activated.");
+                const runBtn = document.getElementById("run_pipeline_btn");
+                runBtn.disabled = false;
+                runBtn.innerText = "Compile Final Security Audit Report";
             } catch (err) {
-                logToConsole("Initialization Error: " + err.message);
+                logToConsole("Fatal Bootstrap Error: " + err.message);
             }
         }
-        initPyodide();
+        initPipelineWasm();
 
         function logToConsole(message) {
             if (!message || !message.trim()) return;
@@ -103,7 +110,7 @@
             out.scrollTop = out.scrollHeight;
         }
 
-        async function getFileBytes(elementId) {
+        async function fetchFileBytes(elementId) {
             const el = document.getElementById(elementId);
             if (!el.files || el.files.length === 0) return null;
             const file = el.files[0];
@@ -111,11 +118,8 @@
             return { name: file.name, data: new Uint8Array(buffer) };
         }
 
-        async function executePythonPipeline() {
-            if (!pyodideModule) {
-                alert("System runtime is still initializing dependencies. Please wait a moment.");
-                return;
-            }
+        async function executeSecurityAuditPipeline() {
+            if (!pyodideInstance) return;
             
             const cName = document.getElementById("company_name").value;
             const cAbbr = document.getElementById("company_abbr").value;
@@ -124,14 +128,13 @@
             const tName = document.getElementById("testee_name").value;
             const tAbbr = document.getElementById("testee_abbr").value;
 
-            const wabFile = await getFileBytes("file_wab");
-
+            const wabFile = await fetchFileBytes("file_wab");
             if (!wabFile) {
-                logToConsole("Aborted: WAB Brief document must be uploaded before compilation.");
-                alert("Please upload the WAB Document.");
+                alert("Please submit the required Work Assignment Brief (WAB) file to begin extraction.");
                 return;
             }
 
+            // Automate precise Date/Month extraction matching browser execution timeline
             const today = new Date();
             const monthText = today.toLocaleDateString("en-US", { month: "long" });
             const yearText = today.getFullYear();
@@ -141,43 +144,53 @@
             const monthNum = String(today.getMonth() + 1).padStart(2, '0');
             const computedDateNumeric = `${dayNum}-${monthNum}-${yearText}`;
 
-            logToConsole(`Date Pipeline Sync: Active Execution Target Set to ${computedDateText}`);
+            logToConsole(`Synchronizing generation timeline tags to: ${computedDateText}`);
 
-            logToConsole("Pulling template document via relative repo tree check...");
+            logToConsole("Fetching 'SA template.docx' baseline from deployment assets channel...");
             try {
                 const response = await fetch("./SA%20template.docx");
-                if (!response.ok) throw new Error("Template access error 404. Make sure 'SA template.docx' is in your repository root.");
+                if (!response.ok) throw new Error("Template access error 404. Verify 'SA template.docx' exists in the base path route repository.");
                 const templateBuffer = await response.arrayBuffer();
                 const templateData = new Uint8Array(templateBuffer);
                 
-                try { pyodideModule.FS.unlink("sa_template.docx"); } catch(e){}
-                pyodideModule.FS.writeFile("sa_template.docx", templateData);
+                try { pyodideInstance.FS.unlink("SA_template.docx"); } catch(e){}
+                pyodideInstance.FS.writeFile("SA_template.docx", templateData);
             } catch (err) {
-                logToConsole("FS Error: " + err.message);
+                logToConsole("Fetch Failure: " + err.message);
                 return;
             }
 
-            try { pyodideModule.FS.unlink(wabFile.name); } catch(e) {}
-            pyodideModule.FS.writeFile(wabFile.name, wabFile.data);
+            try { pyodideInstance.FS.unlink(wabFile.name); } catch(e) {}
+            pyodideInstance.FS.writeFile(wabFile.name, wabFile.data);
 
-            pyodideModule.globals.set("JS_COMPANY_NAME", cName);
-            pyodideModule.globals.set("JS_COMPANY_ABBREVIATION", cAbbr);
-            pyodideModule.globals.set("JS_SYSTEM_NAME", sName);
-            pyodideModule.globals.set("JS_SYSTEM_ABBREVIATION", sAbbr);
-            pyodideModule.globals.set("JS_TESTEE_NAME", tName);
-            pyodideModule.globals.set("JS_TESTEE_ABBREVIATION", tAbbr);
-            pyodideModule.globals.set("JS_WAB_NAME", wabFile.name);
-            pyodideModule.globals.set("JS_COMPUTED_DATE_TEXT", computedDateText);
-            pyodideModule.globals.set("JS_COMPUTED_DATE_NUMERIC", computedDateNumeric);
+            pyodideInstance.globals.set("JS_COMPANY_NAME", cName);
+            pyodideInstance.globals.set("JS_COMPANY_ABBREVIATION", cAbbr);
+            pyodideInstance.globals.set("JS_SYSTEM_NAME", sName);
+            pyodideInstance.globals.set("JS_SYSTEM_ABBREVIATION", sAbbr);
+            pyodideInstance.globals.set("JS_TESTEE_NAME", tName);
+            pyodideInstance.globals.set("JS_TESTEE_ABBREVIATION", tAbbr);
+            pyodideInstance.globals.set("JS_WAB_NAME", wabFile.name);
+            pyodideInstance.globals.set("JS_COMPUTED_DATE_TEXT", computedDateText);
+            pyodideInstance.globals.set("JS_COMPUTED_DATE_NUMERIC", computedDateNumeric);
 
             const pythonScript = `
 import os
 import sys
 import re
 
+class BrowserRedirectStream:
+    def write(self, s):
+        import js
+        js.logToConsole(str(s))
+    def flush(self): pass
+
+sys.stdout = BrowserRedirectStream()
+sys.stderr = BrowserRedirectStream()
+
 from docx import Document
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Pt, RGBColor
+from docx.shared import Pt
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 company_name = JS_COMPANY_NAME
 company_abbr = JS_COMPANY_ABBREVIATION
@@ -185,282 +198,245 @@ sys_name = JS_SYSTEM_NAME
 sys_abbr = JS_SYSTEM_ABBREVIATION
 testee_name = JS_TESTEE_NAME
 testee_abbr = JS_TESTEE_ABBREVIATION
-
 current_date_text = JS_COMPUTED_DATE_TEXT
 current_date_numeric = JS_COMPUTED_DATE_NUMERIC
 
-print(f"Executing clean SA structural build for: {sys_name}")
+system_description_text = ""
+security_requirements = []
+assessment_scope_text = []
+assessment_objective_text = []
 
-def process_dynamic_telemetry(wab_path):
-    scope_paragraphs, objective_paragraphs, security_requirements = [], [], []
-    system_description_text = ""
+print("Running WAB Multi-Section State Machine Parser Block...")
+wab_doc = Document(JS_WAB_NAME)
+state = "SEEKING"
+has_captured_requirements = False
 
-    try:
-        wab_doc = Document(wab_path)
-        capture_scope, capture_obj, capture_desc, capture_req = False, False, False, False
-        
-        for p in wab_doc.paragraphs:
-            txt = "".join(run.text for run in p.runs).strip()
-            normalized_txt = txt.replace('\\xa0', ' ').strip()
-            
-            if "SCOPE OF THE SERVICES" in normalized_txt:
-                capture_scope = True
-                continue
-            elif "BACKGROUND" in normalized_txt:
-                capture_scope = False
+STOP_TRIGGERS = ["projectdeliverables", "wherenecessary", "acceptancecriteria"]
 
-            if "PROJECT OBJECTIVES" in normalized_txt:
-                capture_obj = True
-                continue
-            elif "PROJECT REQUIREMENTS" in normalized_txt or "USER REQUIREMENTS" in normalized_txt:
-                capture_obj = False
+for p in wab_doc.paragraphs:
+    txt = p.text.strip()
+    if not txt: continue
+    
+    normalized_txt = txt.replace('\\xa0', ' ').strip()
+    lower_clean = normalized_txt.lower().replace(" ", "").replace(",", "").replace(":", "")
+    
+    # Structural Section Boundaries Evaluation Blocks
+    if "4.1.1" in normalized_txt and "currentenvironment" in lower_clean:
+        state = "CAPTURING_DESC"
+        continue
+    elif state == "CAPTURING_DESC" and ("4.1.2" in normalized_txt or "projectmanagement" in lower_clean):
+        state = "SEEKING"
 
-            if "4.1.1" in normalized_txt and "Current Environment" in normalized_txt:
-                capture_desc = True
-                continue
-            elif "4.1.2" in normalized_txt or "Project Management" in normalized_txt:
-                capture_desc = False
+    if lower_clean == "scopeoftheservices":
+        state = "CAPTURING_SCOPE"
+        continue
+    elif state == "CAPTURING_SCOPE" and normalized_txt.lower().startswith("the scope of the services"):
+        state = "SEEKING"
 
-            if "The Contractor shall reference the following documents" in normalized_txt or "Contractor shall reference the following documents" in normalized_txt:
-                capture_req = True
-                continue
-            elif capture_req and ("Gather all relevant" in normalized_txt or "4.4.2" in normalized_txt or "Where necessary" in normalized_txt):
-                capture_req = False
+    if lower_clean == "projectobjectives":
+        state = "CAPTURING_OBJECTIVES"
+        continue
+    elif state == "CAPTURING_OBJECTIVES" and ("projectrequirements" in lower_clean or "4." in lower_clean):
+        state = "SEEKING"
 
-            if capture_scope and len(normalized_txt) > 0:
-                if normalized_txt.startswith("To"):
-                    cleaned_txt = normalized_txt.replace("the systems and their classification specified in Section 2 (“Systems”)", "the selected systems (“Systems”)")
-                    cleaned_txt = re.sub(r'^[\\t\\s]*\\([a-z]\\)[\\t\\s]*', '', cleaned_txt, flags=re.IGNORECASE).strip()
-                    if cleaned_txt and cleaned_txt not in scope_paragraphs:
-                        scope_paragraphs.append(cleaned_txt)
+    if "governmentstandards" in lower_clean and "methodologies" in lower_clean and not has_captured_requirements:
+        state = "CAPTURING_REQUIREMENTS"
+        continue
 
-            if capture_obj and len(normalized_txt) > 0:
-                cleaned_txt = re.sub(r'^3\\.\\d+\\s*', '', normalized_txt).strip()
-                cleaned_txt = re.sub(r'-', '', cleaned_txt).strip()
-                if cleaned_txt and cleaned_txt not in objective_paragraphs:
-                    objective_paragraphs.append(cleaned_txt)
-
-            if capture_desc and len(normalized_txt) > 2:
-                if not (normalized_txt.startswith("4.1") or normalized_txt.startswith("4.1.1")):
-                    if "USER REQUIREMENTS" not in normalized_txt and "Current Environment Description" not in normalized_txt:
-                        if not system_description_text:
-                            system_description_text = normalized_txt
-                        else:
-                            system_description_text += "\\n" + normalized_txt
-
-            if capture_req and len(normalized_txt) > 0:
-                if normalized_txt not in security_requirements and "government regulations" not in normalized_txt.lower():
-                    security_requirements.append(normalized_txt)
-                        
-    except Exception as e:
-        print(f"Telemetry warning: {str(e)}")
-
-    if not system_description_text:
-        system_description_text = "System to support processing audit verification workflows."
-
-    return {
-        "scope_paragraphs": scope_paragraphs,
-        "objective_paragraphs": objective_paragraphs,
-        "system_description": system_description_text,
-        "security_requirements": security_requirements
-    }
-
-def generate_sa_report(telemetry, template_path, filename):
-    doc = Document(template_path)
-
-    replacements = [
-        ("*company name* Limited", company_name),
-        ("*company name*", company_name),
-        ("company name limited", company_name),
-        ("company name", company_name),
-        ("information system name (information system abbreviation)", f"{sys_name} ({sys_abbr})"),
-        ("*(INFORMATION SYSTEM ABBREVIATION)*", sys_abbr),
-        ("(INFORMATION SYSTEM ABBREVIATION)", sys_abbr),
-        ("INFORMATION SYSTEM ABBREVIATION", sys_abbr),
-        ("information system name", sys_name),
-        ("company name (company abbreviation)", f"{company_name} ({company_abbr})"),
-        ("company abbreviation", company_abbr),
-        ("COMPANY ABBREVIATION", company_abbr),
-        ("testee name (testee abbreviation)", f"{testee_name} ({testee_abbr})"),
-        ("testee abbreviation", testee_abbr),
-        ("TESTEE ABBREVIATION", testee_abbr),
-        ("testee name", testee_name),
-        ("May 2026", current_date_text),
-        ("June 2026", current_date_text)
-    ]
-
-    def remove_asterisks_entirely(text):
-        return text.replace("*", "").strip()
-
-    def replace_text_in_paragraph(p, lookup_tuples):
-        full_text = "".join(run.text for run in p.runs)
-        clean_stripped = full_text.strip()
-        
-        # STRUCTURAL TITLE GUARD: Instantly exit if this node is a true header line
-        if re.match(r'^\d+\.', clean_stripped) or p.style.name.startswith("Heading"):
-            return
-
-        lower_full = full_text.lower().replace(" ", "").replace("\\n", "")
-        if "reviewandinterview" in lower_full and "checklists" in lower_full:
-            full_text = f"Review and interview sessions to check the security compliance of information systems of {testee_abbr} using security checklists were conducted by {company_abbr}. The following security domains were covered in the security review:"
-            if p.runs:
-                p.runs[0].text = full_text
-                for r in p.runs[1:]: r.text = ""
-            else:
-                p.text = full_text
-            return
-
-        modified = False
-        for k, val in lookup_tuples:
-            cleaned_key = k.strip("*").strip()
-            if k.lower() in full_text.lower() or cleaned_key.lower() in full_text.lower():
-                pattern = re.compile(re.escape(k), re.IGNORECASE)
-                full_text = pattern.sub(val, full_text)
-                pattern_clean = re.compile(re.escape(cleaned_key), re.IGNORECASE)
-                full_text = pattern_clean.sub(val, full_text)
-                modified = True
-                
-        if modified or "*" in full_text:
-            full_text = remove_asterisks_entirely(full_text)
-            if p.runs:
-                p.runs[0].text = full_text
-                for r in p.runs[1:]: r.text = ""
-            else:
-                p.text = full_text
-
-    def insert_paragraph_after(paragraph, text, style=None):
-        new_p = doc.add_paragraph(style=style)
-        new_p.text = text
-        p_element = paragraph._p
-        p_element.addnext(new_p._p)
-        return new_p
-
-    has_populated_section_8 = False
-
-    # Sweep Body Elements Matrix
-    for p_idx, p in enumerate(list(doc.paragraphs)):
-        full_p_text = "".join(run.text for run in p.runs)
-        normalized_p_text = full_p_text.replace('\\n', ' ').strip()
-        lower_normalized = normalized_p_text.lower().replace(" ", "")
-        
-        if p_idx < 15 and ("may 2026" in normalized_p_text.lower() or "june 2026" in normalized_p_text.lower()):
-            p.text = current_date_text
-            for run in p.runs:
-                run.font.name = "Times New Roman"
-                run.font.size = Pt(12)
+    if state == "CAPTURING_REQUIREMENTS":
+        if any(trigger in lower_clean for trigger in STOP_TRIGGERS):
+            state = "SEEKING"
+            has_captured_requirements = True
             continue
 
-        # STRICT HEADER ENFORCEMENT: Never run modification code on section header blocks
-        if "8.securityrequirements" in lower_normalized or re.match(r'^\d+\.', normalized_p_text) or p.style.name.startswith("Heading"):
-            continue
+    # Safe Structural Asset Storage Array Feeds
+    if state == "CAPTURING_DESC":
+        if len(normalized_txt) > 2 and not (normalized_txt.startswith("4.1") or normalized_txt.startswith("4.1.1")):
+            system_description_text = normalized_txt if not system_description_text else system_description_text + "\\n" + normalized_txt
+    elif state == "CAPTURING_SCOPE":
+        if not lower_clean.startswith("scope") and "categoryb" not in lower_clean and len(normalized_txt) > 1:
+            if not normalized_txt.startswith("As a SOA Contractor"):
+                assessment_scope_text.append(normalized_txt)
+    elif state == "CAPTURING_OBJECTIVES":
+        if not lower_clean.startswith("projectobjective") and len(normalized_txt) > 1:
+            assessment_objective_text.append(normalized_txt)
+    elif state == "CAPTURING_REQUIREMENTS":
+        if "governmentstandards" not in lower_clean and "thecontractorshallcomply" not in lower_clean:
+            cleaned_bullet = re.sub(r'^([ivxLCDM\\d\\)\\(\\.\\s*-]+)[\\)\\.]?\\s+', '', normalized_txt).strip()
+            if not cleaned_bullet:
+                cleaned_bullet = normalized_txt
+            if cleaned_bullet and cleaned_bullet not in security_requirements: 
+                security_requirements.append(cleaned_bullet)
 
-        # Target ONLY the placeholder row line below the title block
-        if ("wabsection4.4" in lower_normalized or "wabsection8" in lower_normalized or "copyfromwab" in lower_normalized or "securityrequirements" in lower_normalized) or ("conductingthesecurityaudit" in lower_normalized):
-            if not has_populated_section_8:
-                has_populated_section_8 = True
-                p.text = f"{company_abbr} referred to the following documents in conducting the security audit:"
-                current_anchor = p
-                
-                if len(telemetry["security_requirements"]) > 0:
-                    for msg in telemetry["security_requirements"]:
-                        current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
-                else:
-                    explicit_18_points = [
-                        "Baseline IT Security Policy;",
-                        "IT Security Guidelines;",
-                        "Practice Guide for Security Risk Assessment & Audit;",
-                        "Practice Guide for Information Security Incident Handling;",
-                        "Practice Guide for Penetration Testing;",
-                        "Practice Guide for Internet Gateway Security;",
-                        "Practice Guide for Website and Web Application Security;",
-                        "Practice Guide for Cloud Computing Security;",
-                        "Practice Guide for Mobile Security;",
-                        "Practice Guide for Security Log Management;",
-                        "ArchSD IT Security Policy;",
-                        "ArchSD General Circular No. 4/2008 - 'General Requirement on Software Asset Management';",
-                        "ArchSD General Circular No. 2/2015 - 'Use of Internet Services';",
-                        "End User Instructions on Information Technology Security;",
-                        "ArchSD IT Security Incident Handling Procedures;",
-                        "Security Checklist for iAM Smart-enabled Online Services;",
-                        "Security Testing Report Template for iAM Smart-enabled Online Services;",
-                        "The House Rules of iAM Smart."
-                    ]
-                    for item in explicit_18_points:
-                        current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
-            else:
-                p.text = ""
-                
-        elif "copy from WAB, 4.1.1 Current Environment Description" in normalized_p_text or "copy from WAB, 9.1 System Description" in normalized_p_text:
-            p.text = telemetry["system_description"]
-        elif "insert all under brief of work assignment under category b, 1. Scope of the services, 1.1" in normalized_p_text:
-            if len(telemetry["scope_paragraphs"]) > 0:
-                p.text = telemetry["scope_paragraphs"][0]
-                p.style = 'List Bullet'
-                current_anchor = p
-                for msg in telemetry["scope_paragraphs"][1:]:
-                    current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
-            else: p.text = ""
-        elif "copy from work assignment under category b, all under 3. Project objectives" in normalized_p_text:
-            if len(telemetry["objective_paragraphs"]) > 0:
-                p.text = telemetry["objective_paragraphs"][0]
-                p.style = 'List Bullet'
-                current_anchor = p
-                for msg in telemetry["objective_paragraphs"][1:]:
-                    current_anchor = insert_paragraph_after(current_anchor, msg, style='List Bullet')
-            else: p.text = ""
+def insert_paragraph_after(paragraph, text, style=None):
+    doc_instance = paragraph.part.document
+    new_p = doc_instance.add_paragraph(style=style)
+    new_p.text = text
+    p_element = paragraph._p
+    p_element.addnext(new_p._p)
+    return new_p
+
+def apply_text_styling_and_borders(cell, text):
+    cell.text = ""
+    p = cell.paragraphs[0]
+    run = p.add_run(text)
+    run.font.name = 'Times New Roman'
+    run.font.size = Pt(10)
+    
+    tcPr = cell._tc.get_or_add_tcPr()
+    tcBorders = OxmlElement('w:tcBorders')
+    for border_name in ['top', 'left', 'bottom', 'right']:
+        border = OxmlElement(f'w:{border_name}')
+        border.set(qn('w:val'), 'single')
+        border.set(qn('w:sz'), '4')
+        border.set(qn('w:space'), '0')
+        border.set(qn('w:color'), 'auto')
+        tcBorders.append(border)
+    tcPr.append(tcBorders)
+
+# Master Token Replacement Dictionary Map
+replacements = [
+    ("*company name* Limited", company_name),
+    ("*company name*", company_name),
+    ("company name limited", company_name),
+    ("company name", company_name),
+    ("*information system name*", sys_name),
+    ("information system name", sys_name),
+    ("*(INFORMATION SYSTEM ABBREVIATION)*", sys_abbr),
+    ("(INFORMATION SYSTEM ABBREVIATION)", sys_abbr),
+    ("INFORMATION SYSTEM ABBREVIATION", sys_abbr),
+    ("information system abbreviation", sys_abbr),
+    ("*testee name*", testee_name),
+    ("testee name", testee_name),
+    ("*TESTEE ABBREVIATION*", testee_abbr),
+    ("TESTEE ABBREVIATION", testee_abbr),
+    ("testee abbreviation", testee_abbr),
+    ("*COMPANY ABBREVIATION*", company_abbr),
+    ("COMPANY ABBREVIATION", company_abbr),
+    ("May 2026", current_date_text),
+    ("22-05-2026", current_date_numeric)
+]
+
+print("Injecting compiled variables into target SA layout sections...")
+doc = Document("SA_template.docx")
+
+def process_token_replacements(p, lookup_tuples):
+    full_text = "".join(run.text for run in p.runs)
+    if not full_text.strip(): return
+    if re.match(r'^\\d+(\\.\\d+)*\\s*', full_text.strip()) or p.style.name.startswith("Heading"): return
+    
+    modified = False
+    for k, val in lookup_tuples:
+        if k.lower() in full_text.lower() or k.strip("*").strip().lower() in full_text.lower():
+            pattern = re.compile(re.escape(k), re.IGNORECASE)
+            full_text = pattern.sub(val, full_text)
+            modified = True
+    if modified or "*" in full_text:
+        full_text = full_text.replace("*", "").strip()
+        if p.runs:
+            p.runs[0].text = full_text
+            for r in p.runs[1:]: r.text = ""
+        else: p.text = full_text
+
+# Structural Recursive Sweep across standard Headers/Footers
+for section in doc.sections:
+    for header_p in section.header.paragraphs: process_token_replacements(header_p, replacements)
+    for footer_p in section.footer.paragraphs: process_token_replacements(footer_p, replacements)
+
+has_populated_section_8 = False
+
+for p_idx, p in enumerate(list(doc.paragraphs)):
+    lower_normalized = p.text.lower().replace(" ", "").replace(",", "")
+    
+    if p_idx < 15 and ("may 2026" in p.text.lower() or "june 2026" in p.text.lower()):
+        p.text = current_date_text
+        for run in p.runs:
+            run.font.name = "Times New Roman"
+            run.font.size = Pt(12)
+        continue
+
+    if "8.securityrequirements" in lower_normalized or p.style.name.startswith("Heading"): continue
+
+    if "insertallunderbriefofworkassignmentundercategoryb1.scopeoftheservices1.1" in lower_normalized or "copyfromwab1.1scope" in lower_normalized:
+        p.text = ""
+        current_anchor = p
+        if assessment_scope_text:
+            for text_line in assessment_scope_text:
+                current_anchor = insert_paragraph_after(current_anchor, text_line, style='List Bullet')
         else:
-            replace_text_in_paragraph(p, replacements)
+            p.text = "The scope of the services covers the security areas specified in S17 and G3 guidelines."
 
-    # Sweep Section Headers & Footers
-    for section in doc.sections:
-        for header_p in section.header.paragraphs:
-            replace_text_in_paragraph(header_p, replacements)
-        for footer_p in section.footer.paragraphs:
-            replace_text_in_paragraph(footer_p, replacements)
+    elif "copyfromworkassignmentundercategoryballunder3.projectobjectives" in lower_normalized or "copyfromwab3.projectobjectives" in lower_normalized:
+        p.text = ""
+        current_anchor = p
+        if assessment_objective_text:
+            for text_line in assessment_objective_text:
+                current_anchor = insert_paragraph_after(current_anchor, text_line, style='List Bullet')
+        else:
+            p.text = "To evaluate security risks and verify regulatory baseline compliance."
 
-    # Sweep Table Grid Elements Matrix
-    for table_idx, table in enumerate(doc.tables):
-        if len(table.rows) == 0 or len(table.rows[0].cells) == 0: continue
-        
-        for row in table.rows:
-            for cell in row.cells:
-                for cell_p in cell.paragraphs:
-                    replace_text_in_paragraph(cell_p, replacements)
+    elif "copyfromwabsection4.4" in lower_normalized or "copyfromwabsection4.1.3" in lower_normalized:
+        if not has_populated_section_8:
+            has_populated_section_8 = True
+            p.text = ""
+            
+            # Formulate the contextual prefix string
+            intro_sentence = f"{company_abbr} referred to the following documents in conducting the security audit:"
+            current_anchor = insert_paragraph_after(p, intro_sentence, style='Normal')
+            
+            # Inject guidelines array cleanly as dynamic lists
+            for item in security_requirements:
+                current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
+        else:
+            p.text = ""
+            
+    else:
+        process_token_replacements(p, replacements)
 
-        if table_idx == 0:
-            try:
-                table.cell(0, 0).text = "Version 0.1"
-                table.cell(1, 0).text = "Role"; table.cell(1, 1).text = "Name"; table.cell(1, 2).text = "Action"; table.cell(1, 3).text = "Date"
-                table.cell(2, 0).text = "Created by"; table.cell(2, 1).text = company_name; table.cell(2, 2).text = "Document Revision"; table.cell(2, 3).text = current_date_numeric
-                table.cell(3, 0).text = "Approved by"; table.cell(3, 1).text = ""; table.cell(3, 2).text = "Document Approval"; table.cell(3, 3).text = ""                 
-            except Exception: pass
-        elif table_idx == 1:
-            try:
-                table.cell(0, 0).text = "Version"; table.cell(0, 1).text = "Date"; table.cell(0, 2).text = "Author"; table.cell(0, 3).text = "Summary of Changes"
-                table.cell(1, 0).text = "0.1"; table.cell(1, 1).text = current_date_numeric; table.cell(1, 2).text = company_name; table.cell(1, 3).text = "Document Creation"
-            except Exception: pass
+# Process Table Structural Cells
+for table in doc.tables:
+    first_row_text = "".join(cell.text.lower() for cell in table.rows[0].cells)
+    
+    if "role" in first_row_text and "action" in first_row_text:
+        try:
+            apply_text_styling_and_borders(table.cell(2, 0), "Created by")
+            apply_text_styling_and_borders(table.cell(2, 1), company_name)
+            apply_text_styling_and_borders(table.cell(2, 2), "Document Revision")
+            apply_text_styling_and_borders(table.cell(2, 3), current_date_numeric)
+        except Exception: pass
+        continue
 
-    doc.save(filename)
-    print("SA Report compiled successfully. Structural headers completely locked down.")
+    elif "summaryofchanges" in first_row_text:
+        try:
+            apply_text_styling_and_borders(table.cell(1, 0), "0.1")
+            apply_text_styling_and_borders(table.cell(1, 1), current_date_numeric)
+            apply_text_styling_and_borders(table.cell(1, 2), company_name)
+            apply_text_styling_and_borders(table.cell(1, 3), "Document Creation")
+        except Exception: pass
+        continue
 
-telemetry = process_dynamic_telemetry(JS_WAB_NAME)
-generate_sa_report(telemetry, "sa_template.docx", "Generated_SA_Report_Final.docx")
+    for row in table.rows:
+        for cell in row.cells:
+            for cell_p in cell.paragraphs: process_token_replacements(cell_p, replacements)
+
+doc.save("Generated_SA_Report_Final.docx")
+print("Security Audit Automation Pipeline Task Finalized Successfully.")
 `;
 
             try {
-                await pyodideModule.runPythonAsync(pythonScript);
-                const outputBytes = pyodideModule.FS.readFile("Generated_SA_Report_Final.docx");
+                await pyodideInstance.runPythonAsync(pythonScript);
+                const outputBytes = pyodideInstance.FS.readFile("Generated_SA_Report_Final.docx");
                 const blob = new Blob([outputBytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
-                a.download = "Generated_SA_Report_Final.docx";
+                a.download = `SA_Report_${sAbbr}_Generated.docx`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
-                logToConsole("Security Audit Report compiled and generated successfully!");
+                logToConsole("Success: Dynamic Security Audit Report compiled and downloaded!");
             } catch (err) {
-                logToConsole("Execution Error: " + err.message);
+                logToConsole("Pipeline Processing Fault: " + err.message);
             }
         }
     </script>
