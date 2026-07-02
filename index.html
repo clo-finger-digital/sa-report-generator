@@ -369,7 +369,7 @@ has_populated_section_8 = False
 for p_idx, p in enumerate(list(doc.paragraphs)):
     lower_normalized = p.text.lower().replace(" ", "").replace(",", "")
     
-    # Strict metadata loop override
+    # Strict title page metadata override
     if p_idx < 15 and ("may 2026" in p.text.lower() or "june 2026" in p.text.lower()):
         p.text = current_date_text
         for run in p.runs:
@@ -397,7 +397,7 @@ for p_idx, p in enumerate(list(doc.paragraphs)):
         else:
             p.text = "To evaluate security risks and verify regulatory baseline compliance."
 
-    elif "copyfromwabsection4.4" in lower_normalized or "copyfromwabsection4.1.3" in lower_normalized:
+    elif "copyfromwabsection4.4" in lower_normalized or "copyfromwabsection4.1.3" in lower_normalized or "referredtothefollowingdocuments" in lower_normalized:
         if not has_populated_section_8:
             has_populated_section_8 = True
             p.text = ""  # Empty out placeholder string safely
@@ -412,7 +412,10 @@ for p_idx, p in enumerate(list(doc.paragraphs)):
         else:
             # Prevent Section 8 duplicate injections by discarding redundant paragraphs from layout tree
             p.text = ""
-            p._p.getparent().remove(p._p)
+            try:
+                p._p.getparent().remove(p._p)
+            except Exception:
+                pass
             
     else:
         process_token_replacements(p, replacements)
@@ -442,7 +445,29 @@ for table in doc.tables:
     for row in table.rows:
         for cell in row.cells:
             for cell_p in cell.paragraphs: process_token_replacements(cell_p, replacements)
+print("Performing final global asterisk sanitization cleanup pass...")
 
+# Sanitize regular body text paragraphs
+for p in doc.paragraphs:
+    if "*" in p.text:
+        p.text = p.text.replace("*", "")
+
+# Sanitize table data cells
+for table in doc.tables:
+    for row in table.rows:
+        for cell in row.cells:
+            if "*" in cell.text:
+                cell.text = cell.text.replace("*", "")
+
+# Sanitize headers and footers recursively
+for section in doc.sections:
+    for hp in section.header.paragraphs:
+        if "*" in hp.text:
+            hp.text = hp.text.replace("*", "")
+    for fp in section.footer.paragraphs:
+        if "*" in fp.text:
+            fp.text = fp.text.replace("*", "")
+            
 doc.save("Generated_SA_Report_Final.docx")
 print("Security Audit Automation Pipeline Task Finalized Successfully.")
 `;
