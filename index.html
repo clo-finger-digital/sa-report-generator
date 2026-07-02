@@ -293,6 +293,8 @@ def apply_text_styling_and_borders(cell, text):
 
 # Master Static Token Map
 replacements = [
+    ("information system name (information system abbreviation)", f"{sys_name} ({sys_abbr})"),
+    ("information system name (information system abbreviation", f"{sys_name} ({sys_abbr})"),
     ("*company name* Limited", company_name),
     ("*company name*", company_name),
     ("company name limited", company_name),
@@ -348,7 +350,7 @@ def process_token_replacements(p, lookup_tuples):
             modified = True
             
     if modified:
-        # Precision Slicing Implementation: Injects data across runs while conserving font parameters perfectly
+        # Precision Slicing Implementation: Preserves the exact text formatting attributes of the layout template
         remaining_text = full_text
         for run in p.runs:
             if not remaining_text:
@@ -357,8 +359,23 @@ def process_token_replacements(p, lookup_tuples):
             run_len = len(run.text) if run.text else 0
             if run_len == 0:
                 continue
+            
+            # Cache the exact font configuration assigned to this specific template slice
+            original_size = run.font.size
+            original_bold = run.bold
+            original_italic = run.italic
+            original_color = run.font.color.rgb if run.font.color else None
+            
+            # Substitute matching length characters
             run.text = remaining_text[:run_len]
             remaining_text = remaining_text[run_len:]
+            
+            # Re-enforce formatting attributes to counteract python-docx styling degradation
+            if original_size: run.font.size = original_size
+            run.bold = original_bold
+            run.italic = original_italic
+            if original_color: run.font.color.rgb = original_color
+            
         if remaining_text and p.runs:
             p.runs[-1].text += remaining_text
 
