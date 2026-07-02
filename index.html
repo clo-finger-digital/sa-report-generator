@@ -13,11 +13,11 @@
     <div class="max-w-4xl mx-auto px-4 py-12">
         <header class="border-b border-slate-800 pb-6 mb-8">
             <h1 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Security Audit (SA) Automation Pipeline</h1>
-            <p class="mt-2 text-sm text-slate-400">Dynamically extract Scope, Objectives, and Security Baseline documents straight from the WAB into the clean SA report</p>
+            <p class="mt-2 text-sm text-slate-400">Dynamically extract Scope, Objectives, and Security Baseline documents straight from the WAB into the clean SA report with auto-updating dates</p>
         </header>
 
         <main class="space-y-6">
-            <!-- INJECTOR ENVIRONMENT VARIABLES VARIABLES -->
+            <!-- INJECTOR ENVIRONMENT VARIABLES -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
                 <h2 class="text-xl font-bold text-white mb-4">SA Report Configuration Mappings</h2>
                 
@@ -49,10 +49,10 @@
                 </div>
             </section>
 
-            <!-- MANDATORY BASELINE SPEC UPLOAD -->
+            <!-- SPECIFICATION SOURCE FILE UPLOAD -->
             <section class="bg-slate-800 rounded-lg p-6 border border-slate-700 shadow-xl space-y-4">
                 <h2 class="text-xl font-bold text-white mb-2">Source Brief File Ingestion</h2>
-                <p class="text-xs text-slate-400 mb-4">Ensure your clean target template layout file is uploaded to your GitHub Pages repository folder path matching exactly <code class="text-blue-400">SA template.docx</code>.</p>
+                <p class="text-xs text-slate-400 mb-4">Ensure your clean target template layout file is uploaded to your GitHub Pages repository folder path matching exactly <code class="text-blue-400">SA template_2.docx</code>.</p>
                 
                 <div class="space-y-4">
                     <div class="p-4 bg-slate-950 border border-dashed border-blue-500/50 rounded-lg">
@@ -68,7 +68,7 @@
                 </div>
             </section>
 
-            <!-- CONSOLE EXECUTION TRACKER LOG WINDOW -->
+            <!-- REAL-TIME CONSOLE MONITOR -->
             <section class="bg-slate-950 rounded-lg border border-slate-800 p-4 shadow-inner">
                 <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">System Compilation Real-Time Monitor</span>
                 <pre id="console_output" class="text-xs font-mono text-emerald-400 overflow-x-auto whitespace-pre-wrap max-h-64">Runtime staging trace initialized...</pre>
@@ -134,27 +134,15 @@
                 return;
             }
 
-            // Automate precise Date/Month extraction matching browser execution timeline
-            const today = new Date();
-            const monthText = today.toLocaleDateString("en-US", { month: "long" });
-            const yearText = today.getFullYear();
-            const computedDateText = `${monthText} ${yearText}`;
-            
-            const dayNum = String(today.getDate()).padStart(2, '0');
-            const monthNum = String(today.getMonth() + 1).padStart(2, '0');
-            const computedDateNumeric = `${dayNum}-${monthNum}-${yearText}`;
-
-            logToConsole(`Synchronizing generation timeline tags to: ${computedDateText}`);
-
-            logToConsole("Fetching 'SA template.docx' baseline from deployment assets channel...");
+            logToConsole("Fetching 'SA template_2.docx' baseline configuration via repository branch...");
             try {
-                const response = await fetch("./SA%20template.docx");
-                if (!response.ok) throw new Error("Template access error 404. Verify 'SA template.docx' exists in the base path route repository.");
+                const response = await fetch("./SA%20template_2.docx");
+                if (!response.ok) throw new Error("Template access error 404. Verify 'SA template_2.docx' exists in the base path route repository.");
                 const templateBuffer = await response.arrayBuffer();
                 const templateData = new Uint8Array(templateBuffer);
                 
-                try { pyodideInstance.FS.unlink("SA_template.docx"); } catch(e){}
-                pyodideInstance.FS.writeFile("SA_template.docx", templateData);
+                try { pyodideInstance.FS.unlink("SA_template_2.docx"); } catch(e){}
+                pyodideInstance.FS.writeFile("SA_template_2.docx", templateData);
             } catch (err) {
                 logToConsole("Fetch Failure: " + err.message);
                 return;
@@ -170,13 +158,12 @@
             pyodideInstance.globals.set("JS_TESTEE_NAME", tName);
             pyodideInstance.globals.set("JS_TESTEE_ABBREVIATION", tAbbr);
             pyodideInstance.globals.set("JS_WAB_NAME", wabFile.name);
-            pyodideInstance.globals.set("JS_COMPUTED_DATE_TEXT", computedDateText);
-            pyodideInstance.globals.set("JS_COMPUTED_DATE_NUMERIC", computedDateNumeric);
 
             const pythonScript = `
 import os
 import sys
 import re
+import datetime
 
 class BrowserRedirectStream:
     def write(self, s):
@@ -198,8 +185,15 @@ sys_name = JS_SYSTEM_NAME
 sys_abbr = JS_SYSTEM_ABBREVIATION
 testee_name = JS_TESTEE_NAME
 testee_abbr = JS_TESTEE_ABBREVIATION
-current_date_text = JS_COMPUTED_DATE_TEXT
-current_date_numeric = JS_COMPUTED_DATE_NUMERIC
+
+# 1. Compute Automated Generation Date Metrics via Runtime Execution Timestamp
+now = datetime.datetime.now()
+day_str = now.strftime("%d")          # e.g., "02"
+month_str = now.strftime("%B")        # e.g., "July"
+year_str = now.strftime("%Y")         # e.g., "2026"
+
+current_date_text = f"{month_str} {year_str}"       
+current_date_numeric = f"{day_str}-{now.strftime('%m')}-{year_str}" 
 
 system_description_text = ""
 security_requirements = []
@@ -249,7 +243,7 @@ for p in wab_doc.paragraphs:
             has_captured_requirements = True
             continue
 
-    # Safe Structural Asset Storage Array Feeds
+    # Content Harvesting Channels
     if state == "CAPTURING_DESC":
         if len(normalized_txt) > 2 and not (normalized_txt.startswith("4.1") or normalized_txt.startswith("4.1.1")):
             system_description_text = normalized_txt if not system_description_text else system_description_text + "\\n" + normalized_txt
@@ -262,6 +256,7 @@ for p in wab_doc.paragraphs:
             assessment_objective_text.append(normalized_txt)
     elif state == "CAPTURING_REQUIREMENTS":
         if "governmentstandards" not in lower_clean and "thecontractorshallcomply" not in lower_clean:
+            # Bullet stripping regex targeting leading list indices securely without mutating structural words
             cleaned_bullet = re.sub(r'^([ivxLCDM\\d\\)\\(\\.\\s*-]+)[\\)\\.]?\\s+', '', normalized_txt).strip()
             if not cleaned_bullet:
                 cleaned_bullet = normalized_txt
@@ -294,7 +289,7 @@ def apply_text_styling_and_borders(cell, text):
         tcBorders.append(border)
     tcPr.append(tcBorders)
 
-# Master Token Replacement Dictionary Map
+# Master Static Token Map (Dates are evaluated dynamically via regex below)
 replacements = [
     ("*company name* Limited", company_name),
     ("*company name*", company_name),
@@ -312,33 +307,54 @@ replacements = [
     ("TESTEE ABBREVIATION", testee_abbr),
     ("testee abbreviation", testee_abbr),
     ("*COMPANY ABBREVIATION*", company_abbr),
-    ("COMPANY ABBREVIATION", company_abbr),
-    ("May 2026", current_date_text),
-    ("22-05-2026", current_date_numeric)
+    ("COMPANY ABBREVIATION", company_abbr)
 ]
 
-print("Injecting compiled variables into target SA layout sections...")
-doc = Document("SA_template.docx")
-
+# Automated Regex-Driven Calendar Transformer Pass Engine
 def process_token_replacements(p, lookup_tuples):
     full_text = "".join(run.text for run in p.runs)
     if not full_text.strip(): return
-    if re.match(r'^\\d+(\\.\\d+)*\\s*', full_text.strip()) or p.style.name.startswith("Heading"): return
     
     modified = False
+    
+    # Pattern 1: Matches standard numeric signatures (e.g., 22-05-2026)
+    if re.search(r'\\b\\d{2}-\\d{2}-\\d{4}\\b', full_text):
+        full_text = re.sub(r'\\b\\d{2}-\\d{2}-\\d{4}\\b', current_date_numeric, full_text)
+        modified = True
+        
+    # Pattern 2: Matches WAB history window ranges (e.g., 03 March 2026 to 27 March 2026)
+    if re.search(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\s+to\\s+\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', full_text):
+        target_range = f"01 {current_date_text} to {day_str} {current_date_text}"
+        full_text = re.sub(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\s+to\\s+\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', target_range, full_text)
+        modified = True
+
+    # Pattern 3: Matches single standalone day logs (e.g., 27 March 2026)
+    elif re.search(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', full_text):
+        full_text = re.sub(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', f"{day_str} {current_date_text}", full_text)
+        modified = True
+
+    # Pattern 4: Matches any long literal Month Year expression (e.g., May 2026)
+    elif re.search(r'\\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}\\b', full_text):
+        full_text = re.sub(r'\\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}\\b', current_date_text, full_text)
+        modified = True
+
+    # Run remaining explicit text dictionary substitutions
     for k, val in lookup_tuples:
         if k.lower() in full_text.lower() or k.strip("*").strip().lower() in full_text.lower():
             pattern = re.compile(re.escape(k), re.IGNORECASE)
             full_text = pattern.sub(val, full_text)
             modified = True
-    if modified or "*" in full_text:
-        full_text = full_text.replace("*", "").strip()
+            
+    if modified:
         if p.runs:
             p.runs[0].text = full_text
             for r in p.runs[1:]: r.text = ""
         else: p.text = full_text
 
-# Structural Recursive Sweep across standard Headers/Footers
+print("Injecting compiled variables into target SA layout sections...")
+doc = Document("SA_template_2.docx")
+
+# Recursive structural mapping loop across headers/footers
 for section in doc.sections:
     for header_p in section.header.paragraphs: process_token_replacements(header_p, replacements)
     for footer_p in section.footer.paragraphs: process_token_replacements(footer_p, replacements)
@@ -348,6 +364,7 @@ has_populated_section_8 = False
 for p_idx, p in enumerate(list(doc.paragraphs)):
     lower_normalized = p.text.lower().replace(" ", "").replace(",", "")
     
+    # Strict metadata loop override
     if p_idx < 15 and ("may 2026" in p.text.lower() or "june 2026" in p.text.lower()):
         p.text = current_date_text
         for run in p.runs:
@@ -378,22 +395,24 @@ for p_idx, p in enumerate(list(doc.paragraphs)):
     elif "copyfromwabsection4.4" in lower_normalized or "copyfromwabsection4.1.3" in lower_normalized:
         if not has_populated_section_8:
             has_populated_section_8 = True
-            p.text = ""
+            p.text = ""  # Empty out placeholder string safely
             
-            # Formulate the contextual prefix string
+            # Formulate the explicit descriptive introductory prefix sentence
             intro_sentence = f"{company_abbr} referred to the following documents in conducting the security audit:"
             current_anchor = insert_paragraph_after(p, intro_sentence, style='Normal')
             
-            # Inject guidelines array cleanly as dynamic lists
+            # Append guidelines cleanly as distinct list bullets
             for item in security_requirements:
                 current_anchor = insert_paragraph_after(current_anchor, item, style='List Bullet')
         else:
+            # Prevent Section 8 duplicate injections by discarding redundant paragraphs from layout tree
             p.text = ""
+            p._p.getparent().remove(p._p)
             
     else:
         process_token_replacements(p, replacements)
 
-# Process Table Structural Cells
+# Process Table Structures (Change Control & Sign-Off Blocks)
 for table in doc.tables:
     first_row_text = "".join(cell.text.lower() for cell in table.rows[0].cells)
     
