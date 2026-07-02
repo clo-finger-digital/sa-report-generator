@@ -322,24 +322,24 @@ def process_token_replacements(p, lookup_tuples):
     modified = False
     
     # Pattern 1: Matches standard numeric signatures (e.g., 22-05-2026)
-    if re.search(r'\\b\\d{2}-\\d{2}-\\d{4}\\b', full_text):
-        full_text = re.sub(r'\\b\\d{2}-\\d{2}-\\d{4}\\b', current_date_numeric, full_text)
+    if re.search(r'\b\d{2}-\d{2}-\d{4}\b', full_text):
+        full_text = re.sub(r'\b\d{2}-\d{2}-\d{4}\b', current_date_numeric, full_text)
         modified = True
         
     # Pattern 2: Matches WAB history window ranges (e.g., 03 March 2026 to 27 March 2026)
-    if re.search(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\s+to\\s+\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', full_text):
+    if re.search(r'\b\d{2}\s+[A-Za-z]+\s+\d{4}\s+to\s+\d{2}\s+[A-Za-z]+\s+\d{4}\b', full_text):
         target_range = f"01 {current_date_text} to {day_str} {current_date_text}"
-        full_text = re.sub(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\s+to\\s+\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', target_range, full_text)
+        full_text = re.sub(r'\b\d{2}\s+[A-Za-z]+\s+\d{4}\s+to\s+\d{2}\s+[A-Za-z]+\s+\d{4}\b', target_range, full_text)
         modified = True
 
     # Pattern 3: Matches standalone day logs (e.g., 27 March 2026)
-    elif re.search(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', full_text):
-        full_text = re.sub(r'\\b\\d{2}\\s+[A-Za-z]+\\s+\\d{4}\\b', f"{day_str} {current_date_text}", full_text)
+    elif re.search(r'\b\d{2}\s+[A-Za-z]+\s+\d{4}\b', full_text):
+        full_text = re.sub(r'\b\d{2}\s+[A-Za-z]+\s+\d{4}\b', f"{day_str} {current_date_text}", full_text)
         modified = True
 
     # Pattern 4: Matches long literal Month Year expressions (e.g., May 2026)
-    elif re.search(r'\\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}\\b', full_text):
-        full_text = re.sub(r'\\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}\\b', current_date_text, full_text)
+    elif re.search(r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', full_text):
+        full_text = re.sub(r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b', current_date_text, full_text)
         modified = True
 
     # Run explicit token dictionary string substitutions
@@ -351,10 +351,14 @@ def process_token_replacements(p, lookup_tuples):
             
     if modified:
         if p.runs:
-            # SRA Fix: Feed combined text into the first run and empty subsequent runs to lock layout metrics
+            # Inject combined mutated text directly into the primary run
             p.runs[0].text = full_text
-            for r in p.runs[1:]: 
-                r.text = ""
+            
+            # COMPLETELY PURGE trailing sibling runs from the XML tree 
+            # to remove default layout formatting constraints
+            p_element = p._p
+            for r in p.runs[1:]:
+                p_element.remove(r._r)
         else: 
             p.text = full_text
 
